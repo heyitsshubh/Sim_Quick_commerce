@@ -1,14 +1,40 @@
-import { useState } from 'react';
-import { DELIVERY_MODELS, MARKET_POSITIONING } from '../../data/categories';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface BusinessModelSectionProps {
   round: number;
   onComplete: (data: any) => void;
 }
 
-export default function BusinessModelSection({ round, onComplete }: BusinessModelSectionProps) {
+type BusinessModel = { _id: string; name: string; description?: string; example?: string };
+type MarketPosition = { _id: string; name: string; description?: string; focus?: string };
+
+export default function BusinessModelSection({ onComplete }: BusinessModelSectionProps) {
   const [deliveryModel, setDeliveryModel] = useState('');
   const [positioning, setPositioning] = useState('');
+  const [businessModels, setBusinessModels] = useState<BusinessModel[]>([]);
+  const [marketPositions, setMarketPositions] = useState<MarketPosition[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const { data } = await axios.get('https://sim-quick-commerce-backend.onrender.com/api/step-one/options');
+        setBusinessModels(data?.businessModels ?? []);
+        setMarketPositions(data?.marketPositions ?? []);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load options. Please retry.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOptions();
+  }, []);
 
   const handleSubmit = () => {
     if (deliveryModel && positioning) {
@@ -18,6 +44,9 @@ export default function BusinessModelSection({ round, onComplete }: BusinessMode
       });
     }
   };
+
+  if (loading) return <div>Loading options...</div>;
+  if (error) return <div className="text-red-600">{error}</div>;
 
   return (
     <div>
@@ -29,11 +58,11 @@ export default function BusinessModelSection({ round, onComplete }: BusinessMode
             Quick Commerce Delivery Model
           </label>
           <div className="grid gap-3">
-            {DELIVERY_MODELS.map((model) => (
+            {businessModels.map((model) => (
               <label
-                key={model.id}
+                key={model._id}
                 className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                  deliveryModel === model.id
+                  deliveryModel === model._id
                     ? 'border-blue-600 bg-blue-50'
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
@@ -41,14 +70,17 @@ export default function BusinessModelSection({ round, onComplete }: BusinessMode
                 <input
                   type="radio"
                   name="deliveryModel"
-                  value={model.id}
-                  checked={deliveryModel === model.id}
+                  value={model._id}
+                  checked={deliveryModel === model._id}
                   onChange={(e) => setDeliveryModel(e.target.value)}
                   className="mt-1"
                 />
                 <div>
-                  <div className="font-semibold text-slate-900">{model.label}</div>
-                  <div className="text-sm text-slate-600">{model.desc}</div>
+                  <div className="font-semibold text-slate-900">{model.name}</div>
+                  <div className="text-sm text-slate-600">{model.description}</div>
+                  {model.example && (
+                    <div className="text-xs text-slate-500 mt-1">Example: {model.example}</div>
+                  )}
                 </div>
               </label>
             ))}
@@ -60,11 +92,11 @@ export default function BusinessModelSection({ round, onComplete }: BusinessMode
             Market Positioning
           </label>
           <div className="grid gap-3">
-            {MARKET_POSITIONING.map((pos) => (
+            {marketPositions.map((pos) => (
               <label
-                key={pos.id}
+                key={pos._id}
                 className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                  positioning === pos.id
+                  positioning === pos._id
                     ? 'border-blue-600 bg-blue-50'
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
@@ -72,14 +104,17 @@ export default function BusinessModelSection({ round, onComplete }: BusinessMode
                 <input
                   type="radio"
                   name="positioning"
-                  value={pos.id}
-                  checked={positioning === pos.id}
+                  value={pos._id}
+                  checked={positioning === pos._id}
                   onChange={(e) => setPositioning(e.target.value)}
                   className="mt-1"
                 />
                 <div>
-                  <div className="font-semibold text-slate-900">{pos.label}</div>
-                  <div className="text-sm text-slate-600">{pos.desc}</div>
+                  <div className="font-semibold text-slate-900">{pos.name}</div>
+                  <div className="text-sm text-slate-600">{pos.description}</div>
+                  {pos.focus && (
+                    <div className="text-xs text-slate-500 mt-1">Focus: {pos.focus}</div>
+                  )}
                 </div>
               </label>
             ))}
@@ -93,7 +128,7 @@ export default function BusinessModelSection({ round, onComplete }: BusinessMode
         className="mt-6 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-xl transition-all"
       >
         Save Business Model
-      </button>
-    </div>
-  );
-}
+        </button>
+      </div>
+    ); 
+  }
