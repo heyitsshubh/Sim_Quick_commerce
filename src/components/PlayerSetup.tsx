@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -39,17 +40,37 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
         throw new Error('Failed to create group');
       }
 
-        const userRes = await createUser(username, password, simulationId, groupId);
+             const userRes = await createUser(username, password, simulationId, groupId);
+      
+      console.log('User Response:', userRes);
+      
       const token =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (userRes as any)?.token ||
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (userRes as any)?.data?.token;
 
       if (token) {
         localStorage.setItem('jwt', token);
       }
 
+      const userId = 
+        (userRes as any)?.user?._id ||
+        (userRes as any)?.data?.user?._id ||
+        (userRes as any)?._id || 
+        (userRes as any)?.data?._id ||
+        (userRes as any)?.userId ||
+        (userRes as any)?.data?.userId;
+      
+      console.log('Extracted userId:', userId);
+      
+      if (userId) {
+        localStorage.setItem('userId', userId);
+      } else {
+        console.error('Could not find userId in response');
+      }
+      
+      if (simulationId) {
+        localStorage.setItem('simulationId', simulationId);
+      }
       const player: Player = {
         id: 'player-1',
         name: simName,
