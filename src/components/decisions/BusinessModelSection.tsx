@@ -36,12 +36,25 @@ export default function BusinessModelSection({ onComplete }: BusinessModelSectio
     fetchOptions();
   }, []);
 
-  const handleSubmit = () => {
-    if (deliveryModel && positioning) {
+const handleSubmit = async () => {
+    if (!deliveryModel || !positioning) return;
+
+    try {
+      setLoading(true);
+      await axios.post('https://sim-quick-commerce-backend.onrender.com/api/step-one/save', {
+        businessModel: deliveryModel,
+        marketPositioning: positioning,
+      });
+
       onComplete({
         businessModel: deliveryModel,
         marketPositioning: positioning,
       });
+    } catch (err) {
+      console.error(err);
+      setError('Failed to save. Please retry.');
+    } finally {
+      setLoading(false);
     }
   };
 
