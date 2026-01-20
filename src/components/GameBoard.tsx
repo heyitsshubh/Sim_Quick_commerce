@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Trophy, ChevronRight, Lock, Unlock, HelpCircle } from 'lucide-react';
-import type { Player, GameState } from '../types/game';
+import { Trophy, Lock, Unlock, HelpCircle } from 'lucide-react';
+import type {  GameState } from '../types/game';
 import { ROUND_UNLOCKS } from '../data/categories';
 import DecisionPanel from './DecisionPanel';
 import Leaderboard from './Leaderboard';

@@ -1,14 +1,12 @@
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { GameState } from './types/game';
 import WelcomeScreen from './components/WelcomeScreen';
 import PlayerSetup from './components/PlayerSetup';
 import GameBoard from './components/GameBoard';
 import Leaderboard from './components/Leaderboard';
-
-type Screen = 'welcome' | 'setup' | 'game' | 'results';
+import { useState } from 'react';
 
 function App() {
-  const [screen, setScreen] = useState<Screen>('welcome');
   const [gameState, setGameState] = useState<GameState>({
     currentRound: 1,
     maxRounds: 8,
@@ -18,39 +16,55 @@ function App() {
   });
 
   return (
-    <>
-      {screen === 'welcome' && <WelcomeScreen onStart={() => setScreen('setup')} />}
-
-      {screen === 'setup' && (
-        <PlayerSetup
-          onComplete={(players) => {
-            setGameState({
-              ...gameState,
-              players,
-              started: true,
-            });
-            setScreen('game');
-          }}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<WelcomeScreen />} />
+        
+        <Route 
+          path="/setup" 
+          element={
+            <PlayerSetup
+              onComplete={(players) => {
+                setGameState({
+                  ...gameState,
+                  players,
+                  started: true,
+                });
+              }}
+            />
+          } 
         />
-      )}
-
-      {screen === 'game' && (
-        <GameBoard
-          gameState={gameState}
-          onUpdateGame={setGameState}
-          onFinish={() => setScreen('results')}
+        
+        <Route 
+          path="/game" 
+          element={
+            gameState.started ? (
+              <GameBoard
+                gameState={gameState}
+                onUpdateGame={setGameState}
+                onFinish={() => {}}
+              />
+            ) : (
+              <Navigate to="/setup" replace />
+            )
+          } 
         />
-      )}
-
-      {screen === 'results' && (
-        <Leaderboard
-          players={gameState.players}
-          currentRound={gameState.currentRound}
-          onNextRound={() => {}}
-          isGameOver={true}
+       
+        <Route 
+          path="/results" 
+          element={
+            <Leaderboard
+              players={gameState.players}
+              currentRound={gameState.currentRound}
+              onNextRound={() => {}}
+              isGameOver={true}
+            />
+          } 
         />
-      )}
-    </>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

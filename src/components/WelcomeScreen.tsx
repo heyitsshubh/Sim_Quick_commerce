@@ -1,10 +1,9 @@
 import { Zap, Users, Trophy, TrendingUp, Package, Truck, ShoppingBag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface WelcomeScreenProps {
-  onStart: () => void;
-}
 
-export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
+export default function WelcomeScreen(){
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
       <div className="max-w-5xl w-full">
@@ -132,7 +131,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
         <div className="text-center">
           <button
-            onClick={onStart}
+            onClick={() => navigate('/setup')}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-12 py-4 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             Start Game

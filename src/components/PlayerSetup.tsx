@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Play } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { Player } from '../types/game';
 import {
   createSimulation,
@@ -12,6 +13,8 @@ interface PlayerSetupProps {
 }
 
 export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
+  const navigate = useNavigate();
+
   const [simName, setSimName] = useState('');
   const [groupName, setGroupName] = useState('');
   const [username, setUsername] = useState('');
@@ -56,6 +59,7 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
       };
 
       onComplete([player]);
+      navigate('/game');
     } catch (err) {
       console.error(err);
       alert('Something went wrong. Please try again.');

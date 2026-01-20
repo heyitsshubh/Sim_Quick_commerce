@@ -32,6 +32,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
   const [activeSection, setActiveSection] = useState('business');
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSectionComplete = (sectionId: string, data: any) => {
     const updatedPlayer = {
       ...player,
