@@ -18,6 +18,7 @@ export const createGroup = async (name: string, simulationId: string) => {
   return res.data;
 };
 
+
 export const createUser = async (
   username: string,
   password: string,
