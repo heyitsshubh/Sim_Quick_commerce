@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { usePersistentState } from '../../hooks/usePersistentState';
 
 interface BusinessModelSectionProps {
   round: number;
@@ -11,8 +12,8 @@ type BusinessModel = { _id: string; name: string; description?: string; example?
 type MarketPosition = { _id: string; name: string; description?: string; focus?: string };
 
 export default function BusinessModelSection({ onComplete }: BusinessModelSectionProps) {
-  const [deliveryModel, setDeliveryModel] = useState('');
-  const [positioning, setPositioning] = useState<string[]>([]);
+  const [deliveryModel, setDeliveryModel] = usePersistentState('step1_deliveryModel', '');
+  const [positioning, setPositioning] = usePersistentState<string[]>('step1_positioning', []);
   const [businessModels, setBusinessModels] = useState<BusinessModel[]>([]);
   const [marketPositions, setMarketPositions] = useState<MarketPosition[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,14 +38,13 @@ export default function BusinessModelSection({ onComplete }: BusinessModelSectio
   }, []);
 
   const handlePositioningChange = (posId: string) => {
-    setPositioning((prev) =>
-      prev.includes(posId)
-        ? prev.filter((id) => id !== posId)
-        : [...prev, posId]
-    );
+    const newPositioning = positioning.includes(posId)
+      ? positioning.filter((id: string) => id !== posId)
+      : [...positioning, posId];
+    setPositioning(newPositioning);
   };
 
-   const handleSubmit = async () => {
+    const handleSubmit = async () => {
     if (!deliveryModel || positioning.length === 0) {
       setError('Please select both Business Model and at least one Market Position');
       return;
@@ -53,20 +53,10 @@ export default function BusinessModelSection({ onComplete }: BusinessModelSectio
     try {
       setLoading(true);
       setError(null);
-      
-      // Get userId and simulationId from localStorage or context
+
       const token = localStorage.getItem('jwt');
-      // You'll need to decode the JWT or store these separately
-      // For now, assuming they're stored separately:
       const userId = localStorage.getItem('userId');
       const simulationId = localStorage.getItem('simulationId');
-
-      console.log('Sending payload:', {
-        userId,
-        simulationId,
-        businessModelId: deliveryModel,
-        marketPositionIds: positioning, // Note: marketPositionIds not marketPositioningIds
-      });
 
       await axios.post(
         'https://sim-quick-commerce-backend.onrender.com/api/step-one/save',
@@ -74,7 +64,7 @@ export default function BusinessModelSection({ onComplete }: BusinessModelSectio
           userId,
           simulationId,
           businessModelId: deliveryModel,
-          marketPositionIds: positioning, // Changed from marketPositioningIds
+          marketPositionIds: positioning,
         },
         {
           headers: {
@@ -82,6 +72,10 @@ export default function BusinessModelSection({ onComplete }: BusinessModelSectio
           },
         }
       );
+
+      // Don't clear localStorage - keep the data for when user comes back
+      // localStorage.removeItem('step1_deliveryModel');
+      // localStorage.removeItem('step1_positioning');
 
       onComplete({
         businessModel: deliveryModel,
@@ -93,14 +87,18 @@ export default function BusinessModelSection({ onComplete }: BusinessModelSectio
       setLoading(false);
     }
   };
-// ...existing code...
 
-  if (loading) return <div>Loading options...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+  if (loading && businessModels.length === 0) return <div>Loading options...</div>;
 
   return (
     <div>
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Business Model & Positioning</h2>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
 
       <div className="space-y-6">
         <div>
@@ -174,10 +172,10 @@ export default function BusinessModelSection({ onComplete }: BusinessModelSectio
 
       <button
         onClick={handleSubmit}
-        disabled={!deliveryModel || positioning.length === 0}
+        disabled={!deliveryModel || positioning.length === 0 || loading}
         className="mt-6 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-xl transition-all"
       >
-        Save Business Model
+        {loading ? 'Saving...' : 'Save Business Model'}
       </button>
     </div>
   );

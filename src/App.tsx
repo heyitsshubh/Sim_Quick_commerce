@@ -4,7 +4,7 @@ import WelcomeScreen from './components/WelcomeScreen';
 import PlayerSetup from './components/PlayerSetup';
 import GameBoard from './components/GameBoard';
 import Leaderboard from './components/Leaderboard';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
   const [gameState, setGameState] = useState<GameState>({
@@ -14,6 +14,32 @@ function App() {
     started: false,
     finished: false,
   });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load game state from localStorage on mount
+  useEffect(() => {
+    const savedGameState = localStorage.getItem('gameState');
+    if (savedGameState) {
+      try {
+        const parsedState = JSON.parse(savedGameState);
+        setGameState(parsedState);
+      } catch (err) {
+        console.error('Failed to parse saved game state:', err);
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  // Save game state to localStorage whenever it changes
+  useEffect(() => {
+    if (!isLoading) {
+      localStorage.setItem('gameState', JSON.stringify(gameState));
+    }
+  }, [gameState, isLoading]);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
 
   return (
     <BrowserRouter>
@@ -25,11 +51,11 @@ function App() {
           element={
             <PlayerSetup
               onComplete={(players) => {
-                setGameState({
-                  ...gameState,
+                setGameState(prev => ({
+                  ...prev,
                   players,
                   started: true,
-                });
+                }));
               }}
             />
           } 
@@ -42,23 +68,31 @@ function App() {
               <GameBoard
                 gameState={gameState}
                 onUpdateGame={setGameState}
-                onFinish={() => {}}
+                onFinish={() => {
+                  setGameState(prev => ({ ...prev, finished: true }));
+                }}
               />
             ) : (
               <Navigate to="/setup" replace />
             )
           } 
         />
-       
+        
         <Route 
           path="/results" 
           element={
-            <Leaderboard
-              players={gameState.players}
-              currentRound={gameState.currentRound}
-              onNextRound={() => {}}
-              isGameOver={true}
-            />
+            gameState.finished ? (
+              <Leaderboard
+                players={gameState.players}
+                currentRound={gameState.currentRound}
+                onNextRound={() => {
+                  setGameState(prev => ({ ...prev, currentRound: prev.currentRound + 1 }));
+                }}
+                isGameOver={gameState.finished}
+              />
+            ) : (
+              <Navigate to="/game" replace />
+            )
           } 
         />
 

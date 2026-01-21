@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Lock } from 'lucide-react';
+import { usePersistentState } from '../../hooks/usePersistentState';
 
 interface ProductCategoriesSectionProps {
   round: number;
@@ -12,7 +13,7 @@ type Category = { _id: string; name: string; isActive?: boolean };
 
 export default function ProductCategoriesSection({ round, onComplete }: ProductCategoriesSectionProps) {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selections, setSelections] = useState<Record<string, boolean>>({});
+  const [selections, setSelections] = usePersistentState<Record<string, boolean>>('step2_selections', {});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,57 +36,59 @@ export default function ProductCategoriesSection({ round, onComplete }: ProductC
   }, []);
 
   const handleToggle = (id: string) => {
-    setSelections(prev => ({ ...prev, [id]: !prev[id] }));
+    setSelections({
+      ...selections,
+      [id]: !selections[id],
+    });
   };
 
   const handleSubmit = async () => {
-  const selectedIds = Object.keys(selections).filter(id => selections[id]);
+    const selectedIds = Object.keys(selections).filter((id) => selections[id]);
 
-  if (selectedIds.length === 0) {
-    setError('Select at least one category');
-    return;
-  }
+    if (selectedIds.length === 0) {
+      setError('Select at least one category');
+      return;
+    }
 
-  try {
-    setSaving(true);
-    setError(null);
+    try {
+      setSaving(true);
+      setError(null);
 
-    const token = localStorage.getItem('jwt') || '';
-    const userId = localStorage.getItem('userId');
-    const simulationId = localStorage.getItem('simulationId');
+      const token = localStorage.getItem('jwt') || '';
+      const userId = localStorage.getItem('userId');
+      const simulationId = localStorage.getItem('simulationId');
 
-    // 🔥 Convert to backend format
-    const categoriesPayload = selectedIds.map(id => ({
-      categoryId: id,
-      enabled: true,
-      inventoryLevel: "Medium" // or let user choose later
-    }));
+      const categoriesPayload = selectedIds.map((id) => ({
+        categoryId: id,
+        enabled: true,
+        inventoryLevel: 'Medium',
+      }));
 
-    await axios.post(
-      'https://sim-quick-commerce-backend.onrender.com/api/step-two/save',
-      {
-        userId,
-        simulationId,
-        roundNumber: round,
-        categories: categoriesPayload
-      },
-      {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      }
-    );
+      await axios.post(
+        'https://sim-quick-commerce-backend.onrender.com/api/step-two/save',
+        {
+          userId,
+          simulationId,
+          roundNumber: round,
+          categories: categoriesPayload,
+        },
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
+      );
 
-    onComplete({
-      productCategories: selections,
-      selectedCategoryIds: selectedIds,
-    });
-
-  } catch (err: any) {
-    console.error('Save failed:', err.response?.data || err.message);
-    setError(err.response?.data?.message || 'Failed to save. Please retry.');
-  } finally {
-    setSaving(false);
-  }
-};
+      // Don't clear - keep selections persisted
+      onComplete({
+        productCategories: selections,
+        selectedCategoryIds: selectedIds,
+      });
+    } catch (err: any) {
+      console.error('Save failed:', err.response?.data || err.message);
+      setError(err.response?.data?.message || 'Failed to save. Please retry.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) return <div>Loading categories...</div>;
 
@@ -127,9 +130,7 @@ export default function ProductCategoriesSection({ round, onComplete }: ProductC
             <Lock className="w-5 h-5" />
             <span>More categories unlock in future rounds.</span>
           </div>
-          <p className="text-sm text-slate-600">
-            Keep playing to expand your product range!
-          </p>
+          <p className="text-sm text-slate-600">Keep playing to expand your product range!</p>
         </div>
       )}
 
