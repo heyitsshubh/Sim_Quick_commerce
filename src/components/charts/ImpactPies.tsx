@@ -20,7 +20,7 @@ export default function ImpactPie({ title, data }: ImpactPieProps) {
         {title}
       </h4>
 
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="80%">
         <PieChart>
           <Pie
             data={data}
@@ -28,8 +28,8 @@ export default function ImpactPie({ title, data }: ImpactPieProps) {
             nameKey="name"
             cx="50%"
             cy="50%"
-            outerRadius={70}
-            innerRadius={40}
+            outerRadius={40}
+            innerRadius={20}
             label
           >
             {data.map((_, index) => (
