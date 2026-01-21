@@ -135,7 +135,7 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
           className="w-full bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 disabled:bg-gray-400"
         >
           <Play className="w-5 h-5" />
-          {loading ? 'Starting...' : 'Start Round 1'}
+          {loading ? 'Starting...':'Start Round 1'}
         </button>
       </div>
     </div>
