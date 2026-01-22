@@ -11,13 +11,12 @@ const STORAGE_KEY = "step5_technology_state";
 
 export default function TechnologySection({ round, onComplete }: TechnologySectionProps) {
   const [config, setConfig] = useState<any>(null);
-  const [selections, setSelections] = useState<any>({});
+  const [selections, setSelections] = useState<any>(null);
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   /* ===== LOAD CONFIG + RESTORE ===== */
-
   useEffect(() => {
     const load = async () => {
       const { data } = await axios.get(
@@ -29,22 +28,21 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
       if (saved) {
         setSelections(JSON.parse(saved));
       } else {
-    setSelections({
-  customerFacing: {
-    mobileApp: true,
-    website: false,
-    voiceOrdering: false,
-    aiRecommendations: false
-  },
-  operations: {
-    darkStoreSystem: true,
-    riderApp: true,
-    demandForecastingAI: false,
-    dynamicPricing: false,
-    supplyChainAnalytics: false
-  }
-});
-
+        setSelections({
+          customerFacing: {
+            mobileApp: true,
+            website: false,
+            voiceOrdering: false,
+            aiRecommendations: false
+          },
+          operations: {
+            darkStoreSystem: true,
+            riderApp: true,
+            demandForecastingAI: false,
+            dynamicPricing: false,
+            supplyChainAnalytics: false
+          }
+        });
       }
       setLoading(false);
     };
@@ -52,7 +50,6 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
   }, []);
 
   /* ===== TOGGLE ===== */
-
   const toggle = (section: string, key: string) => {
     setSelections((prev: any) => ({
       ...prev,
@@ -64,9 +61,8 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
   };
 
   /* ===== LIVE CALCULATION ===== */
-
   useEffect(() => {
-    if (!config) return;
+    if (!config || !selections) return;
 
     const calculate = async () => {
       const { data } = await axios.post(
@@ -81,10 +77,8 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
   }, [selections, config]);
 
   /* ===== SAVE ===== */
-
   const handleSave = async () => {
     setSaving(true);
-
     await axios.post(
       "https://sim-quick-commerce-backend.onrender.com/api/step-five/save",
       {
@@ -94,97 +88,185 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
         ...selections
       }
     );
-
-    onComplete({ ...selections, result });
+    onComplete({ selections, result });
     setSaving(false);
   };
 
-  if (loading) return <div>Loading Technology Setup...</div>;
+  if (loading || !selections) return <div>Loading Technology Setup...</div>;
 
   /* ===== UI ===== */
-
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">Technology & Platform</h2>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-      {/* CUSTOMER FACING */}
-      <h3 className="font-semibold mb-3">Customer Facing</h3>
-      {Object.entries(config.customerFacing).map(([key, value]: any) => (
-        <Option
-          key={key}
-          label={key}
-          checked={!!selections.customerFacing?.[key]}
-          required={key === "mobileApp"}
-          cost={value.devCost || value.setupCost}
-          onToggle={() => toggle("customerFacing", key)}
-        />
-      ))}
+      {/* LEFT SIDE – OPTIONS */}
+      <div className="lg:col-span-2 space-y-8">
+        <h2 className="text-2xl font-bold">Technology & Platform</h2>
 
-      {/* OPERATIONS */}
-      <h3 className="font-semibold mt-6 mb-3">Operations</h3>
-      {Object.entries(config.operations).map(([key, value]: any) => (
-        <Option
-          key={key}
-          label={key}
-          checked={!!selections.operations?.[key]}
-          required={key === "darkStoreSystem" || key === "riderApp"}
-          cost={value.cost || value.devCost}
-          impact={value.wasteReductionPercent}
-          onToggle={() => toggle("operations", key)}
-        />
-      ))}
+        {/* CUSTOMER FACING */}
+        <Section title="Customer Facing Systems" subtitle="User experience & growth drivers">
+          {Object.entries(config.customerFacing).map(([key, value]: any) => (
+            <TechOption
+              key={key}
+              label={formatLabel(key)}
+              checked={!!selections.customerFacing[key]}
+              required={key === "mobileApp"}
+              cost={value.devCost || value.setupCost}
+              impact={
+                key === "aiRecommendations"
+                  ? ["+15% basket size", "+10% conversion"]
+                  : ["Improved customer experience"]
+              }
+              onToggle={() => toggle("customerFacing", key)}
+            />
+          ))}
+        </Section>
 
-      {/* IMPACT */}
-      {result && (
-        <div className="mt-6 bg-green-50 border p-4 rounded-xl">
-          <h3 className="font-semibold mb-2">Impact Summary</h3>
-          <p><b>Total Cost:</b> ₹{(result.totalCost).toFixed(2)} L</p>
-          <ul className="text-sm mt-2 space-y-1">
-            <li>🛒 Conversion +{result.customerFacing?.kpis?.conversion || 0}%</li>
-            <li>🧺 Basket Size +{result.customerFacing?.kpis?.basketSize || 0}%</li>
-            <li>📉 Waste Reduction −{result.operations?.kpis?.wasteReduction || 0}%</li>
-            <li>📊 Decision Quality +{result.operations?.kpis?.decisionQuality || 0}%</li>
-          </ul>
-        </div>
-      )}
+        {/* OPERATIONS */}
+        <Section title="Operations & Intelligence" subtitle="Efficiency, margins & scalability">
+          {Object.entries(config.operations).map(([key, value]: any) => (
+            <TechOption
+              key={key}
+              label={formatLabel(key)}
+              checked={!!selections.operations[key]}
+              required={key === "darkStoreSystem" || key === "riderApp"}
+              cost={value.cost || value.devCost}
+              impact={getOperationImpact(key, value)}
+              onToggle={() => toggle("operations", key)}
+            />
+          ))}
+        </Section>
 
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="mt-6 w-full bg-blue-600 text-white py-3 rounded-xl"
-      >
-        {saving ? "Saving..." : "Save Technology Setup"}
-      </button>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold"
+        >
+          {saving ? "Saving..." : "Save Technology Setup"}
+        </button>
+      </div>
+
+      {/* RIGHT SIDE – IMPACT */}
+      <div className="space-y-6 sticky top-6 h-fit">
+        {result && (
+          <>
+            <ImpactCard
+              title="Total Technology Cost"
+              icon="💻"
+              cost={result.totalCost}
+              kpis={[
+                { label: "Conversion", value: `+${result.customerFacing?.kpis?.conversion || 0}%` },
+                { label: "Basket Size", value: `+${result.customerFacing?.kpis?.basketSize || 0}%` },
+                { label: "Waste Reduction", value: `-${result.operations?.kpis?.wasteReduction || 0}%` },
+                { label: "Decision Quality", value: `+${result.operations?.kpis?.decisionQuality || 0}%` }
+              ]}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-/* ===== OPTION COMPONENT ===== */
+/* ================= COMPONENTS ================= */
 
-function Option({ label, checked, required, cost, impact, onToggle }: any) {
+function Section({ title, subtitle, children }: any) {
   return (
-    <label className="flex items-start gap-3 p-4 border rounded-xl mb-3 cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={required}
-        onChange={onToggle}
-      />
-      <div>
-        <div className="font-semibold">
-          {label} {required && "(Required)"}
+    <div>
+      <h3 className="text-xl font-semibold">{title}</h3>
+      <p className="text-sm text-slate-500 mb-4">{subtitle}</p>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
+}
+
+function TechOption({ label, checked, required, cost, impact, onToggle }: any) {
+  return (
+    <label
+      className={`flex items-start justify-between gap-4 p-4 rounded-xl border cursor-pointer transition ${
+        checked
+          ? "bg-green-50 border-green-400"
+          : "border-slate-200 hover:border-slate-300"
+      } ${required && "opacity-80 cursor-not-allowed bg-blue-50 border-blue-300"}`}
+    >
+      <div className="flex gap-3">
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={required}
+          onChange={onToggle}
+          className="mt-1"
+        />
+        <div>
+          <div className="font-semibold">
+            {label} {required && <span className="text-xs text-blue-600">(Required)</span>}
+          </div>
+          {cost && (
+            <div className="text-xs text-slate-600">
+              Cost: ₹{cost.min}–{cost.max} L
+            </div>
+          )}
+          {impact && (
+            <ul className="mt-1 text-xs text-green-700 list-disc ml-4">
+              {impact.map((i: string) => (
+                <li key={i}>{i}</li>
+              ))}
+            </ul>
+          )}
         </div>
-        {cost && (
-          <div className="text-sm text-slate-600">
-            Cost: ₹{cost.min}–{cost.max} L
-          </div>
-        )}
-        {impact && (
-          <div className="text-sm text-green-600">
-            Impact: Reduce waste {impact}%
-          </div>
-        )}
       </div>
     </label>
   );
+}
+
+function ImpactCard({ title, icon, cost, kpis }: any) {
+  return (
+    <div className="rounded-2xl border bg-gradient-to-br from-white to-slate-50 p-6 shadow-md">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="h-12 w-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl">
+          {icon}
+        </div>
+        <div>
+          <h4 className="font-semibold">{title}</h4>
+          <p className="text-xs text-slate-500">Monthly impact</p>
+        </div>
+      </div>
+
+      <div className="text-3xl font-bold mb-4">
+        ₹{cost.toFixed(2)} L
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {kpis.map((k: any) => (
+          <div
+            key={k.label}
+            className="bg-green-100 text-green-700 rounded-lg px-3 py-2 text-xs font-semibold flex justify-between"
+          >
+            <span>{k.label}</span>
+            <span>{k.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ================= HELPERS ================= */
+
+function formatLabel(key: string) {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (s) => s.toUpperCase());
+}
+
+function getOperationImpact(key: string, value: any) {
+  switch (key) {
+    case "demandForecastingAI":
+      return [`-${value.wasteReductionPercent}% waste`, "+10% planning accuracy"];
+    case "dynamicPricing":
+      return ["+8% margin", "+5% revenue uplift"];
+    case "supplyChainAnalytics":
+      return ["+15% decision quality", "+10% cost efficiency"];
+    default:
+      return ["Operational efficiency boost"];
+  }
 }
