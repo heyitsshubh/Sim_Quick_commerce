@@ -10,20 +10,26 @@ interface ProductCategoriesSectionProps {
   onComplete: (data: any) => void;
 }
 
+type InventoryRange = {
+  label: string;
+  min: number;
+  max: number;
+};
+
 type Category = {
   _id: string;
   name: string;
+  inventoryRanges: InventoryRange[];
+  baseMonthlyDemand: number;
 };
 
 type SelectionState = Record<
   string,
   {
     enabled: boolean;
-    inventory: string;
+    inventoryRange: string;
   }
 >;
-
-const INVENTORY_OPTIONS = ['0-500', '500-1000', '1000-1500'];
 
 export default function ProductCategoriesSection({
   round,
@@ -32,20 +38,15 @@ export default function ProductCategoriesSection({
   const [categories, setCategories] = useState<Category[]>([]);
   const [marketPie, setMarketPie] = useState<any[]>([]);
   const [quickPie, setQuickPie] = useState<any[]>([]);
-  const [selections, setSelections] = usePersistentState<SelectionState>(
-    'step2_selections',
-    {}
-  );
+  const [selections, setSelections] =
+    usePersistentState<SelectionState>('step2_selections', {});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch categories
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        setLoading(true);
-
         const [catRes, marketRes, quickRes] = await Promise.all([
           axios.get('https://sim-quick-commerce-backend.onrender.com/api/step-two/categories'),
           axios.get('https://sim-quick-commerce-backend.onrender.com/api/market-positioning'),
@@ -65,12 +66,15 @@ export default function ProductCategoriesSection({
     fetchAll();
   }, []);
 
-  const toggleCategory = (id: string) => {
+  const toggleCategory = (category: Category) => {
     setSelections({
       ...selections,
-      [id]: selections[id]
-        ? { ...selections[id], enabled: !selections[id].enabled }
-        : { enabled: true, inventory: INVENTORY_OPTIONS[0] },
+      [category._id]: selections[category._id]
+        ? { ...selections[category._id], enabled: !selections[category._id].enabled }
+        : {
+            enabled: true,
+            inventoryRange: category.inventoryRanges[0]?.label,
+          },
     });
   };
 
@@ -78,8 +82,8 @@ export default function ProductCategoriesSection({
     setSelections({
       ...selections,
       [id]: {
-        ...selections[id],
-        inventory: value,
+        ...(selections[id] ?? { enabled: true }),
+        inventoryRange: value,
       },
     });
   };
@@ -90,7 +94,7 @@ export default function ProductCategoriesSection({
       .map(([id, v]) => ({
         categoryId: id,
         enabled: true,
-        inventoryRange: v.inventory,
+        inventoryRange: v.inventoryRange,
       }));
 
     if (selectedCategories.length === 0) {
@@ -126,7 +130,7 @@ export default function ProductCategoriesSection({
     <div>
       <h2 className="text-2xl font-bold mb-2">Product Categories</h2>
       <p className="text-slate-600 mb-6">
-        Select categories and inventory levels
+        Select categories and inventory ranges
       </p>
 
       {error && (
@@ -138,53 +142,52 @@ export default function ProductCategoriesSection({
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {categories.map((category) => {
           const selection = selections[category._id];
+          const enabled = !!selection?.enabled;
 
           return (
             <div
               key={category._id}
               className={`p-4 border-2 rounded-xl ${
-                selection?.enabled
-                  ? 'border-blue-600 bg-blue-50'
-                  : 'border-slate-200'
+                enabled ? 'border-blue-600 bg-blue-50' : 'border-slate-200'
               }`}
             >
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={!!selection?.enabled}
-                  onChange={() => toggleCategory(category._id)}
+                  checked={enabled}
+                  onChange={() => toggleCategory(category)}
                 />
                 <span className="font-semibold">{category.name}</span>
               </label>
 
-              {selection?.enabled && (
-                <div className="mt-4 space-y-4">
-                  {/* Inventory */}
+              {/* Charts always visible */}
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <ImpactPie
+                  title="Quick Commerce Impact"
+                  data={quickPie}
+                />
+                <ImpactPie
+                  title="Market Positioning Impact"
+                  data={marketPie}
+                />
+              </div>
+
+              {/* Inventory Dropdown only when enabled */}
+              {enabled && (
+                <div className="mt-4">
                   <select
-                    value={selection.inventory}
+                    value={selection.inventoryRange}
                     onChange={(e) =>
                       updateInventory(category._id, e.target.value)
                     }
                     className="w-full border rounded-lg px-3 py-2"
                   >
-                    {INVENTORY_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                    {category.inventoryRanges.map((r) => (
+                      <option key={r.label} value={r.label}>
+                        {r.label}
                       </option>
                     ))}
                   </select>
-
-                  {/* Pie Charts */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <ImpactPie
-                      title="Quick Commerce Impact"
-                      data={quickPie}
-                    />
-                    <ImpactPie
-                      title="Market Positioning Impact"
-                      data={marketPie}
-                    />
-                  </div>
                 </div>
               )}
             </div>

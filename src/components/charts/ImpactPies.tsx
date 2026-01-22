@@ -2,7 +2,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Tooltip,
   ResponsiveContainer,
 } from "recharts";
 
@@ -39,7 +38,7 @@ export default function ImpactPie({ title, data }: ImpactPieProps) {
               />
             ))}
           </Pie>
-          <Tooltip />
+        
         </PieChart>
       </ResponsiveContainer>
     </div>
