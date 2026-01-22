@@ -39,6 +39,8 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
   const [error, setError] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
 
+  const canLogin = username.trim() && password.trim();
+
   // 🔐 LOGIN
   const handleLogin = async () => {
     try {
@@ -54,11 +56,15 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
 
       localStorage.setItem("jwt", token);
       localStorage.setItem("userId", userId);
-      localStorage.setItem("simulationId", simulationId);
-      localStorage.setItem("groupId", groupId);
+      if (simulationId) {
+        localStorage.setItem("simulationId", simulationId);
+        setSelectedSimulation(simulationId);
+      }
+      if (groupId) {
+        localStorage.setItem("groupId", groupId);
+        setSelectedGroup(groupId);
+      }
 
-      setSelectedSimulation(simulationId);
-      setSelectedGroup(groupId);
       setLoggedIn(true);
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
@@ -67,40 +73,50 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
     }
   };
 
-  // 🔽 FETCH SIMULATIONS
+  // 🔽 FETCH SIMULATIONS (ON MOUNT)
   useEffect(() => {
-    if (!loggedIn) return;
-
     const fetchSimulations = async () => {
-      const { data } = await axios.get(
-        "https://sim-quick-commerce-backend.onrender.com/api/simulation/list"
-      );
-      setSimulations(data);
+      try {
+        const { data } = await axios.get(
+          "https://sim-quick-commerce-backend.onrender.com/api/simulation/list"
+        );
+        setSimulations(Array.isArray(data) ? data : []);
+      } catch (e: any) {
+        console.error("Failed to load simulations", e);
+      }
     };
-
     fetchSimulations();
-  }, [loggedIn]);
+  }, []);
 
   // 🔽 FETCH GROUPS (BASED ON SIMULATION)
   useEffect(() => {
-    if (!selectedSimulation) return;
+    if (!selectedSimulation) {
+      setGroups([]);
+      setSelectedGroup("");
+      return;
+    }
 
     const fetchGroups = async () => {
-      const { data } = await axios.get(
-        `https://sim-quick-commerce-backend.onrender.com/api/group/by-simulation/${selectedSimulation}`
-      );
-      setGroups(data);
+      try {
+        const { data } = await axios.get(
+          `https://sim-quick-commerce-backend.onrender.com/api/group/by-simulation/${selectedSimulation}`
+        );
+        setGroups(Array.isArray(data) ? data : []);
+      } catch (e: any) {
+        console.error("Failed to load groups", e);
+        setGroups([]);
+      }
     };
-
     fetchGroups();
   }, [selectedSimulation]);
 
   // ▶️ START GAME
   const handleStartGame = () => {
+    const selectedGroupObj = groups.find((g) => g._id === selectedGroup);
     const player: Player = {
       id: "player-1",
       name: username,
-      company: "Group",
+      company: selectedGroupObj?.name || "Group",
       score: 0,
       decisions: {},
     };
@@ -123,9 +139,15 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
           </div>
         )}
 
-        {/* LOGIN FORM */}
+        {/* LOGIN FORM (SUBMIT ON ENTER) */}
         {!loggedIn && (
-          <div className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (canLogin) handleLogin();
+            }}
+          >
             <input
               placeholder="Username"
               value={username}
@@ -142,24 +164,29 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
             />
 
             <button
-              onClick={handleLogin}
-              disabled={loading || !username || !password}
+              type="submit"
+              disabled={loading || !canLogin}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white py-3 rounded-xl flex items-center justify-center gap-2"
             >
               <LogIn className="w-5 h-5" />
               {loading ? "Logging in..." : "Login"}
             </button>
-          </div>
+          </form>
         )}
 
-        {/* SIMULATION & GROUP (AFTER LOGIN) */}
+        {/* SIMULATION & GROUP (AFTER LOGIN; ENABLED) */}
         {loggedIn && (
           <div className="space-y-4 mt-6">
             <select
               value={selectedSimulation}
-              disabled
-              className="w-full px-4 py-2 border rounded-lg bg-slate-100"
+              onChange={(e) => {
+                const simId = e.target.value;
+                setSelectedSimulation(simId);
+                localStorage.setItem("simulationId", simId);
+              }}
+              className="w-full px-4 py-2 border rounded-lg"
             >
+              <option value="">-- Select Simulation --</option>
               {simulations.map((sim) => (
                 <option key={sim._id} value={sim._id}>
                   {sim.name}
@@ -169,9 +196,15 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
 
             <select
               value={selectedGroup}
-              disabled
-              className="w-full px-4 py-2 border rounded-lg bg-slate-100"
+              onChange={(e) => {
+                const grpId = e.target.value;
+                setSelectedGroup(grpId);
+                localStorage.setItem("groupId", grpId);
+              }}
+              disabled={!selectedSimulation}
+              className="w-full px-4 py-2 border rounded-lg disabled:bg-slate-100"
             >
+              <option value="">-- Select Group --</option>
               {groups.map((grp) => (
                 <option key={grp._id} value={grp._id}>
                   {grp.name}
@@ -181,7 +214,8 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
 
             <button
               onClick={handleStartGame}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl flex items-center justify-center gap-2"
+              disabled={!selectedSimulation || !selectedGroup}
+              className="w-full bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white py-3 rounded-xl flex items-center justify-center gap-2"
             >
               <Play className="w-5 h-5" />
               Start Game
