@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { ChevronRight, Store, Package, Truck, Laptop, DollarSign, TrendingUp, Users, CheckCircle2 } from 'lucide-react';
 import type { Player } from '../types/game';
@@ -6,6 +7,7 @@ import ProductCategoriesSection from './decisions/ProductCategoriesSection';
 import DarkStoresSection from './decisions/DarkStoresSection';
 import DeliverySection from './decisions/DeliverySection';
 import TechnologySection from './decisions/TechnologySection';
+import SourcingSection from './decisions/SourcingSection';
 import PricingSection from './decisions/PricingSection';
 import MarketingSection from './decisions/MarketingSection';
 import OperationsSection from './decisions/OperationsSection';
@@ -23,6 +25,7 @@ const SECTIONS = [
   { id: 'darkstores', label: 'Dark Stores', icon: Store },
   { id: 'delivery', label: 'Delivery Fleet', icon: Truck },
   { id: 'technology', label: 'Technology', icon: Laptop },
+  { id: 'sourcing', label: 'Sourcing', icon: Package },
   { id: 'pricing', label: 'Pricing', icon: DollarSign },
   { id: 'marketing', label: 'Marketing', icon: TrendingUp },
   { id: 'operations', label: 'Operations', icon: Users },
@@ -158,12 +161,19 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
               onComplete={(data) => handleSectionComplete('technology', data)}
             />
           )}
+          {activeSection === 'sourcing' && (
+            <SourcingSection
+              round={round}
+              onComplete={(data: any) => handleSectionComplete('sourcing', data)}
+            />
+          )}
           {activeSection === 'pricing' && (
             <PricingSection
               round={round}
               onComplete={(data) => handleSectionComplete('pricing', data)}
             />
           )}
+
           {activeSection === 'marketing' && (
             <MarketingSection
               round={round}
@@ -173,7 +183,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
           {activeSection === 'operations' && (
             <OperationsSection
               round={round}
-              onComplete={(data) => handleSectionComplete('operations', data)}
+              onComplete={(data: any) => handleSectionComplete('operations', data)}
             />
           )}
         </div>

@@ -270,3 +270,4 @@ function getOperationImpact(key: string, value: any) {
       return ["Operational efficiency boost"];
   }
 }
+                

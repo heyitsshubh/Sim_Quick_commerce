@@ -13,6 +13,7 @@ export interface RoundDecisions {
   darkStores: Record<string, DarkStoreDecision>;
   deliveryFleet?: FleetDecision;
   technology: Record<string, boolean>;
+  sourcing: Record<string, SourcingDecision>;
   pricing?: PricingDecision;
   marketing: Record<string, MarketingDecision>;
   operations?: OperationsDecision;
@@ -22,6 +23,7 @@ export interface RoundDecisions {
 export interface CategoryDecision {
   enabled: boolean;
   skus?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   extras?: Record<string, any>;
 }
 
@@ -37,6 +39,13 @@ export interface FleetDecision {
   bikeCount?: number;
   electricPercent?: number;
   thirdParty: boolean;
+}
+
+export interface SourcingDecision {
+  supplier: string;
+  leadTime?: number;
+  cost?: number;
+  quality?: string;
 }
 
 export interface PricingDecision {
