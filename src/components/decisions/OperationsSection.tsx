@@ -1,4 +1,8 @@
-import { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+const STORAGE_KEY = "step9_operations_state";
 
 interface OperationsSectionProps {
   round: number;
@@ -6,148 +10,212 @@ interface OperationsSectionProps {
 }
 
 export default function OperationsSection({ round, onComplete }: OperationsSectionProps) {
-  const [storeManagers, setStoreManagers] = useState(1);
-  const [pickers, setPickers] = useState(10);
-  const [riders, setRiders] = useState(50);
-  const [techTeam, setTechTeam] = useState(15);
-  const [marketing, setMarketing] = useState(10);
-  const [support, setSupport] = useState(20);
+  const [config, setConfig] = useState<any>(null);
+  const [impact, setImpact] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = () => {
-    onComplete({
-      operations: {
-        storeManagers,
-        pickers,
-        riders,
-        techTeam,
-        marketing,
-        support,
-      },
-    });
+  const [state, setState] = useState<any>({
+    darkStoreStaff: {
+      storeManager: 1,
+      pickersPackers: 10,
+      inventoryStaff: 2,
+      qualityCheckers: 1,
+      cleaningStaff: 1
+    },
+    deliveryStaff: {
+      deliveryRiders: 50,
+      riderSupervisors: 5
+    },
+    corporateTeam: {
+      techTeam: 10,
+      marketingTeam: 5,
+      customerSupport: 10
+    }
+  });
+
+  /* ================= LOAD CONFIG + RESTORE ================= */
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await axios.get(
+        "https://sim-quick-commerce-backend.onrender.com/api/operations-staffing-config"
+      );
+      setConfig(data);
+
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setState(JSON.parse(saved));
+    };
+    load();
+  }, []);
+
+  /* ================= LIVE CALCULATION ================= */
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+    axios
+      .post(
+        "https://sim-quick-commerce-backend.onrender.com/api/step-nine/calculate",
+        state
+      )
+      .then(res => setImpact(res.data))
+      .catch(() => {});
+  }, [state]);
+
+  /* ================= SAVE ================= */
+
+  const handleSave = async () => {
+    setSaving(true);
+
+    await axios.post(
+      "https://sim-quick-commerce-backend.onrender.com/api/step-nine/save",
+      {
+        userId: localStorage.getItem("userId"),
+        simulationId: localStorage.getItem("simulationId"),
+        roundNumber: round,
+        ...state
+      }
+    );
+
+    onComplete({ ...state, impact });
+    setSaving(false);
   };
 
+  if (!config) return <div>Loading operations setup...</div>;
+
+  /* ================= UI ================= */
+
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">Operations & Staffing</h2>
-      <p className="text-slate-600 mb-6">Set team sizes for different departments</p>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* LEFT */}
+      <div className="lg:col-span-2 space-y-6">
+        <h2 className="text-2xl font-bold">Operations & Staffing</h2>
 
-      <div className="space-y-6">
-        <div className="bg-slate-50 rounded-xl p-4">
-          <h3 className="font-semibold text-slate-900 mb-4">Dark Store Staff (Per Store)</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Store Managers: {storeManagers}
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="3"
-                step="1"
-                value={storeManagers}
-                onChange={(e) => setStoreManagers(parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-slate-600">₹30-70K/month each</div>
-            </div>
+        <Section title="Dark Store Staff (Per Store)">
+          <Slider label="Store Manager" min={1} max={1}
+            value={state.darkStoreStaff.storeManager}
+            set={(v: number) =>
+              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,storeManager:v}}))
+            }
+          />
+          <Slider label="Pickers / Packers" min={5} max={30}
+            value={state.darkStoreStaff.pickersPackers}
+            set={(v: number) =>
+              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,pickersPackers:v}}))
+            }
+          />
+          <Slider label="Inventory Staff" min={2} max={8}
+            value={state.darkStoreStaff.inventoryStaff}
+            set={(v: number) =>
+              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,inventoryStaff:v}}))
+            }
+          />
+          <Slider label="Quality Checkers" min={1} max={4}
+            value={state.darkStoreStaff.qualityCheckers}
+            set={(v: number) =>
+              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,qualityCheckers:v}}))
+            }
+          />
+          <Slider label="Cleaning / Maintenance" min={1} max={3}
+            value={state.darkStoreStaff.cleaningStaff}
+            set={(v: number) =>
+              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,cleaningStaff:v}}))
+            }
+          />
+        </Section>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Pickers/Packers: {pickers}
-              </label>
-              <input
-                type="range"
-                min="5"
-                max="30"
-                step="5"
-                value={pickers}
-                onChange={(e) => setPickers(parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-slate-600">₹15-25K/month each</div>
-            </div>
-          </div>
-        </div>
+        <Section title="Delivery Staff (Per City)">
+          <Slider label="Delivery Riders" min={50} max={1000}
+            value={state.deliveryStaff.deliveryRiders}
+            set={(v: number) =>
+              setState((p:any)=>({...p,deliveryStaff:{...p.deliveryStaff,deliveryRiders:v}}))
+            }
+          />
+          <Slider label="Rider Supervisors" min={5} max={50}
+            value={state.deliveryStaff.riderSupervisors}
+            set={(v: number) =>
+              setState((p:any)=>({...p,deliveryStaff:{...p.deliveryStaff,riderSupervisors:v}}))
+            }
+          />
+        </Section>
 
-        <div className="bg-slate-50 rounded-xl p-4">
-          <h3 className="font-semibold text-slate-900 mb-4">Delivery Staff (Per City)</h3>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Delivery Riders: {riders}
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="1000"
-              step="50"
-              value={riders}
-              onChange={(e) => setRiders(parseInt(e.target.value))}
-              className="w-full"
-            />
-            <div className="text-xs text-slate-600">₹18-25K/month each</div>
-          </div>
-        </div>
+        <Section title="Corporate Team">
+          <Slider label="Technology Team" min={10} max={50}
+            value={state.corporateTeam.techTeam}
+            set={(v: number) =>
+              setState((p:any)=>({...p,corporateTeam:{...p.corporateTeam,techTeam:v}}))
+            }
+          />
+          <Slider label="Marketing Team" min={5} max={25}
+            value={state.corporateTeam.marketingTeam}
+            set={(v: number) =>
+              setState((p:any)=>({...p,corporateTeam:{...p.corporateTeam,marketingTeam:v}}))
+            }
+          />
+          <Slider label="Customer Support" min={10} max={100}
+            value={state.corporateTeam.customerSupport}
+            set={(v: number) =>
+              setState((p:any)=>({...p,corporateTeam:{...p.corporateTeam,customerSupport:v}}))
+            }
+          />
+        </Section>
 
-        <div className="bg-slate-50 rounded-xl p-4">
-          <h3 className="font-semibold text-slate-900 mb-4">Corporate Team</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Technology Team: {techTeam}
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="50"
-                step="5"
-                value={techTeam}
-                onChange={(e) => setTechTeam(parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-slate-600">₹40K-1.5L/month each</div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Marketing Team: {marketing}
-              </label>
-              <input
-                type="range"
-                min="5"
-                max="25"
-                step="5"
-                value={marketing}
-                onChange={(e) => setMarketing(parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-slate-600">₹25K-1L/month each</div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Customer Support: {support}
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="10"
-                value={support}
-                onChange={(e) => setSupport(parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="text-xs text-slate-600">₹15-30K/month each</div>
-            </div>
-          </div>
-        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl"
+        >
+          {saving ? "Saving..." : "Save Operations Plan"}
+        </button>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all"
-      >
-        Save Operations Plan
-      </button>
+      {/* RIGHT – IMPACT */}
+      {impact && (
+        <div className="sticky top-6 bg-gradient-to-br from-blue-50 to-green-50 border rounded-2xl p-6 shadow-sm">
+          <h4 className="font-semibold text-lg mb-3">Impact Summary</h4>
+
+          <p className="text-2xl font-bold mb-4">
+            ₹{(impact.totalCost / 100000).toFixed(2)} L / month
+          </p>
+
+          <ul className="space-y-2 text-sm">
+            <li>⚡ Speed +{impact.kpis.speed}%</li>
+            {/* <li>📦 Fulfillment +{impact.kpis.fulfillment}%</li> */}
+            <li>📈 Scalability +{impact.kpis.scalability}%</li>
+            <li>😊 Customer Satisfaction +{impact.kpis.customerSatisfaction}%</li>
+            <li>✅ Quality +{impact.kpis.quality}%</li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================= UI COMPONENTS ================= */
+
+function Section({ title, children }: any) {
+  return (
+    <div className="bg-white border rounded-2xl p-5 space-y-4">
+      <h3 className="font-semibold text-lg">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function Slider({ label, min, max, value, set }: any) {
+  return (
+    <div>
+      <label className="text-sm font-medium">
+        {label}: <b>{value}</b>
+      </label>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => set(+e.target.value)}
+        className="w-full"
+      />
     </div>
   );
 }
