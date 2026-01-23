@@ -23,32 +23,12 @@ export default function SourcingSection({ round, onComplete }: any) {
 
   /* ================= CALCULATE IMPACT ================= */
 
-  useEffect(() => {
-    if (!selectedSupplierId) return;
-
-    localStorage.setItem("selectedSupplierId", selectedSupplierId);
-
-    axios
-      .post(
-        "https://sim-quick-commerce-backend.onrender.com/api/step-six/calculate",
-        { supplierId: selectedSupplierId }
-      )
-      // .then(res => setImpact(res.data))
-      .catch(() => {});
-  }, [selectedSupplierId]);
 
   /* ================= SELECT SUPPLIER ================= */
 
-  const selectSupplier = async (supplierId: string) => {
+  const selectSupplier = (supplierId: string) => {
     setSelectedSupplierId(supplierId);
-
-    await axios.post(
-      "https://sim-quick-commerce-backend.onrender.com/api/selection/select",
-      {
-        userId: localStorage.getItem("userId"),
-        supplierId
-      }
-    );
+    localStorage.setItem("selectedSupplierId", supplierId);
   };
 
   /* ================= SAVE ================= */
@@ -59,7 +39,7 @@ export default function SourcingSection({ round, onComplete }: any) {
       setError(null);
 
       await axios.post(
-        "https://sim-quick-commerce-backend.onrender.com/api/step-six/save",
+        "https://sim-quick-commerce-backend.onrender.com/api/selection/save",
         {
           userId: localStorage.getItem("userId"),
           simulationId: localStorage.getItem("simulationId"),
@@ -79,9 +59,9 @@ export default function SourcingSection({ round, onComplete }: any) {
   /* ================= UI ================= */
 
   return (
-    <div className="grid grid-cols-1 gap-8">
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold">Sourcing & Supplier Selection</h2>
+    <div className="grid grid-cols-1 gap-4 md:gap-8 px-4 md:px-0">
+      <div className="space-y-4 md:space-y-6">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">Sourcing & Supplier Selection</h2>
 
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
@@ -92,70 +72,78 @@ export default function SourcingSection({ round, onComplete }: any) {
         {/* ================= SUPPLIERS ================= */}
 
         <Section title="Choose Supplier (Select One)">
-          {suppliers.map(s => (
-            <div
-              key={s._id}
-              onClick={() => selectSupplier(s._id)}
-              className={`border rounded-xl p-4 flex items-start gap-4 cursor-pointer transition shadow-sm
-                ${
-                  selectedSupplierId === s._id
-                    ? "border-green-500 bg-green-50 ring-1 ring-green-300"
-                    : "hover:border-slate-400"
-                }
-              `}
-            >
-              <input
-                type="radio"
-                name="supplier"
-                aria-label={`Select ${s.name}`}
-                checked={selectedSupplierId === s._id}
-                readOnly
-                className="mt-2"
-              />
+     {suppliers.map((s) => {
+  const selected = selectedSupplierId === s._id;
 
-              <img
-                src={s.logoUrl}
-                alt={s.name}
-                className="w-14 h-14 rounded-md border"
-              />
+  return (
+    <div
+      key={s._id}
+      onClick={() => selectSupplier(s._id)}
+      className={`border rounded-xl md:rounded-2xl p-4 md:p-6 cursor-pointer transition
+        ${
+          selected
+            ? "bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200"
+            : "bg-white border-slate-200 hover:border-emerald-300"
+        }
+      `}
+    >
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
+        {/* LEFT: LOGO + NAME */}
+        <div className="flex flex-row md:flex-col items-center gap-3 md:gap-0 md:w-44 md:shrink-0 w-full">
+          <input
+            type="radio"
+            name="supplier"
+            checked={selected}
+            readOnly
+            className="md:mb-3 accent-emerald-600 shrink-0"
+          />
 
-              <div className="flex-1 text-sm">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-slate-900">{s.name}</h4>
-                  {selectedSupplierId === s._id && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-green-600 text-white">Selected</span>
-                  )}
-                </div>
+          <img
+            src={s.logoUrl}
+            alt={s.name}
+            className="w-12 h-12 md:w-20 md:h-20 object-contain md:mb-3 shrink-0"
+          />
 
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <div className="bg-slate-50 rounded-lg px-3 py-2">
-                    <div className="text-xs text-slate-500">Cost / Unit</div>
-                    <div className="font-semibold">₹{Number(s.costPerUnit).toLocaleString()}</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg px-3 py-2">
-                    <div className="text-xs text-slate-500">Delivery</div>
-                    <div className="font-semibold">{s.deliveryTimeWeeks} weeks</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg px-3 py-2">
-                    <div className="text-xs text-slate-500">Turnover Bonus</div>
-                    <div className="font-semibold">{s.turnoverBonusPercent}%</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg px-3 py-2">
-                    <div className="text-xs text-slate-500">Bonus After</div>
-                    <div className="font-semibold">₹{(s.bonusAfterTurnover / 100000).toFixed(1)} L</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg px-3 py-2">
-                    <div className="text-xs text-slate-500">Reliability</div>
-                    <div className="font-semibold">⭐ {s.reliabilityRating}/5</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg px-3 py-2">
-                    <div className="text-xs text-slate-500">Sustainability</div>
-                    <div className="font-semibold">🌱 {s.sustainabilityRating}/5</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+          <h4 className="md:text-center font-bold text-sm md:text-base leading-tight flex-1 md:flex-none">
+            {s.name}
+          </h4>
+          {selected && (
+            <span className="md:hidden text-xs px-2 py-1 rounded-full bg-emerald-600 text-white">✓</span>
+          )}
+        </div>
+
+        {/* RIGHT: DETAILS TABLE */}
+        <div className="flex-1 space-y-2 md:space-y-3 text-xs md:text-sm w-full">
+          <DetailRow
+            label="Costs for distribution"
+            value={`₹${Number(s.costPerUnit).toLocaleString()} / unit`}
+          />
+          <DetailRow
+            label="Delivery time"
+            value={`${s.deliveryTimeWeeks} weeks`}
+          />
+          <DetailRow
+            label="Turnover bonus"
+            value={`${s.turnoverBonusPercent}%`}
+          />
+          <DetailRow
+            label="Bonus rewarded after turnover"
+            value={`₹${(s.bonusAfterTurnover / 1_000_000).toFixed(2)} Cr`}
+          />
+          <DetailRow
+            label="Reliability"
+            value={<StarMeter score={s.reliabilityRating} />}
+          />
+          <DetailRow
+            label="Sustainability"
+            value={<StarMeter score={s.sustainabilityRating} />}
+          />
+        </div>
+      </div>
+    </div>
+  );
+})}
+
         </Section>
 
         <button
@@ -174,9 +162,28 @@ export default function SourcingSection({ round, onComplete }: any) {
 
 function Section({ title, children }: any) {
   return (
-    <div className="bg-white border rounded-2xl p-5 space-y-4">
-      <h3 className="font-semibold text-lg">{title}</h3>
+    <div className="bg-white border rounded-xl md:rounded-2xl p-4 md:p-5 space-y-3 md:space-y-4">
+      <h3 className="font-semibold text-base md:text-lg">{title}</h3>
       {children}
     </div>
+  );
+}
+
+function DetailRow({ label, value }: any) {
+  return (
+    <div className="flex items-center justify-between border-b border-slate-200 pb-2 gap-2">
+      <span className="text-slate-600 text-left flex-1">{label}</span>
+      <span className="font-semibold text-slate-900 text-right">{value}</span>
+    </div>
+  );
+}
+
+function StarMeter({ score }: any) {
+  const stars = Math.round(Number(score) || 0);
+  return (
+    <span className="text-yellow-500">
+      {"★".repeat(stars)}
+      {"☆".repeat(5 - stars)}
+    </span>
   );
 }
