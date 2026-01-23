@@ -26,9 +26,9 @@ const SECTIONS = [
   { id: 'delivery', label: 'Delivery Fleet', icon: Truck },
   { id: 'technology', label: 'Technology', icon: Laptop },
   { id: 'sourcing', label: 'Sourcing', icon: Package },
-  { id: 'pricing', label: 'Pricing', icon: DollarSign },
   { id: 'marketing', label: 'Marketing', icon: TrendingUp },
   { id: 'operations', label: 'Operations', icon: Users },
+   { id: 'pricing', label: 'Pricing', icon: DollarSign }
 ];
 
 export default function DecisionPanel({ player, round, onComplete, onUpdatePlayer }: DecisionPanelProps) {

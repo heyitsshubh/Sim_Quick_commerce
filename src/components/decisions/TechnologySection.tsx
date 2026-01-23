@@ -15,23 +15,23 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [websiteBudget, setWebsiteBudget] = useState(0);
 
-  /* ===== LOAD CONFIG + RESTORE ===== */
   useEffect(() => {
     const load = async () => {
       const { data } = await axios.get(
         "https://sim-quick-commerce-backend.onrender.com/api/technology-config"
       );
       setConfig(data);
-
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        setSelections(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        setSelections(parsed);
+        setWebsiteBudget(parsed.websiteBudget || 0);
       } else {
         setSelections({
           customerFacing: {
             mobileApp: true,
-            website: false,
             voiceOrdering: false,
             aiRecommendations: false
           },
@@ -43,12 +43,12 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
             supplyChainAnalytics: false
           }
         });
+        setWebsiteBudget(0);
       }
       setLoading(false);
     };
     load();
   }, []);
-
   /* ===== TOGGLE ===== */
   const toggle = (section: string, key: string) => {
     setSelections((prev: any) => ({
@@ -67,14 +67,20 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
     const calculate = async () => {
       const { data } = await axios.post(
         "https://sim-quick-commerce-backend.onrender.com/api/step-five/calculate",
-        selections
+        {
+          ...selections,
+          websiteBudget
+        }
       );
       setResult(data);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selections));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        ...selections,
+        websiteBudget
+      }));
     };
 
     calculate();
-  }, [selections, config]);
+  }, [selections, websiteBudget, config]);
 
   /* ===== SAVE ===== */
   const handleSave = async () => {
@@ -85,7 +91,8 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
         userId: localStorage.getItem("userId"),
         simulationId: localStorage.getItem("simulationId"),
         roundNumber: round,
-        ...selections
+        ...selections,
+        websiteBudget
       }
     );
     onComplete({ selections, result });
@@ -97,31 +104,34 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
   /* ===== UI ===== */
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
       {/* LEFT SIDE – OPTIONS */}
       <div className="lg:col-span-2 space-y-8">
         <h2 className="text-2xl font-bold">Technology & Platform</h2>
 
+        {/* WEBSITE BUDGET SLIDER */}
+
         {/* CUSTOMER FACING */}
         <Section title="Customer Facing Systems" subtitle="User experience & growth drivers">
-          {Object.entries(config.customerFacing).map(([key, value]: any) => (
-            <TechOption
-              key={key}
-              label={formatLabel(key)}
-              checked={!!selections.customerFacing[key]}
-              required={key === "mobileApp"}
-              cost={value.devCost || value.setupCost}
-              impact={
-                key === "aiRecommendations"
-                  ? ["+15% basket size", "+10% conversion"]
-                  : ["Improved customer experience"]
-              }
-              onToggle={() => toggle("customerFacing", key)}
-            />
-          ))}
-        </Section>
-
-        {/* OPERATIONS */}
+          {Object.entries(config.customerFacing).map(([key, value]: any) => {
+            // Skip website - it's a slider now
+            if (key === "website") return null;
+            return (
+              <TechOption
+                key={key}
+                label={formatLabel(key)}
+                checked={!!selections.customerFacing[key]}
+                required={key === "mobileApp"}
+                cost={value.devCost || value.setupCost}
+                impact={
+                  key === "aiRecommendations"
+                    ? ["+15% basket size", "+10% conversion"]
+                    : ["Improved customer experience"]
+                }
+                onToggle={() => toggle("customerFacing", key)}
+              />
+            );
+          })}
+        </Section> 
         <Section title="Operations & Intelligence" subtitle="Efficiency, margins & scalability">
           {Object.entries(config.operations).map(([key, value]: any) => (
             <TechOption
@@ -135,7 +145,26 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
             />
           ))}
         </Section>
-
+          <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
+          <label className="text-lg font-semibold text-blue-900 mb-2 block">
+            Website Development Budget: ₹{websiteBudget} Lakhs
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={websiteBudget}
+            onChange={(e) => setWebsiteBudget(Number(e.target.value))}
+            className="w-full h-2 bg-blue-300 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-blue-700 mt-2">
+            <span>₹0 L</span>
+            <span>₹100 L</span>
+          </div>
+          <p className="text-sm text-blue-800 mt-3">
+            💡 Allocate budget for website development. Higher investment = better conversion & features.
+          </p>
+        </div>
         <button
           onClick={handleSave}
           disabled={saving}
@@ -202,7 +231,7 @@ function TechOption({ label, checked, required, cost, impact, onToggle }: any) {
           </div>
           {cost && (
             <div className="text-xs text-slate-600">
-              Cost: ₹{cost.min}–{cost.max} L
+              Cost: ₹{cost.max} L
             </div>
           )}
           {impact && (
@@ -249,7 +278,6 @@ function ImpactCard({ title, icon, cost, kpis }: any) {
     </div>
   );
 }
-
 /* ================= HELPERS ================= */
 
 function formatLabel(key: string) {
@@ -257,7 +285,6 @@ function formatLabel(key: string) {
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (s) => s.toUpperCase());
 }
-
 function getOperationImpact(key: string, value: any) {
   switch (key) {
     case "demandForecastingAI":
@@ -269,5 +296,4 @@ function getOperationImpact(key: string, value: any) {
     default:
       return ["Operational efficiency boost"];
   }
-}
-                
+}              

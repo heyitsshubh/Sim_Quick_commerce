@@ -139,7 +139,7 @@ export default function ProductCategoriesSection({
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6">
         {categories.map((category) => {
           const selection = selections[category._id];
           const enabled = !!selection?.enabled;
@@ -163,11 +163,11 @@ export default function ProductCategoriesSection({
               {/* Charts always visible */}
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <ImpactPie
-                  title="Quick Commerce Impact"
+                  title="Quick Commerce Demand"
                   data={quickPie}
                 />
                 <ImpactPie
-                  title="Market Positioning Impact"
+                  title="Market Positioning Demand"
                   data={marketPie}
                 />
               </div>
@@ -175,6 +175,9 @@ export default function ProductCategoriesSection({
               {/* Inventory Dropdown only when enabled */}
               {enabled && (
                 <div className="mt-4">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Inventory Level
+                  </label>
                   <select
                     value={selection.inventoryRange}
                     onChange={(e) =>

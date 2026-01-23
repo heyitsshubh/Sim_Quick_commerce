@@ -3,6 +3,7 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
+  Tooltip,
 } from "recharts";
 
 interface ImpactPieProps {
@@ -21,6 +22,10 @@ export default function ImpactPie({ title, data }: ImpactPieProps) {
 
       <ResponsiveContainer width="100%" height="80%">
         <PieChart>
+          <Tooltip 
+            formatter={(value) => `${value}`}
+            contentStyle={{ backgroundColor: "#fff", border: "1px solid #ccc", borderRadius: "4px" }}
+          />
           <Pie
             data={data}
             dataKey="value"

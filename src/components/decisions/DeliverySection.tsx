@@ -17,7 +17,6 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
 
   /* ================= DELIVERY FLEET ================= */
   const [ownFleet, setOwnFleet] = useState(false);
-  const [thirdParty, setThirdParty] = useState(false);
   const [riderCount, setRiderCount] = useState(50);
   const [bikeCount, setBikeCount] = useState(50);
   const [electricPercent, setElectricPercent] = useState(0);
@@ -30,6 +29,7 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
 
   /* ================= IMPACT ================= */
   const [impact, setImpact] = useState<any>(null);
+  const [thirdParty, setThirdParty] = useState(false);
 
   /* ================= LOAD CONFIG + RESTORE ================= */
   useEffect(() => {
@@ -44,7 +44,6 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
         if (saved) {
           const s = JSON.parse(saved);
           setOwnFleet(s.ownFleet);
-          setThirdParty(s.thirdParty);
           setRiderCount(s.riderCount);
           setBikeCount(s.bikeCount);
           setElectricPercent(s.electricPercent);
@@ -82,8 +81,7 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
               electricBikes: {
                 enabled: electricPercent > 0,
                 percentage: electricPercent
-              },
-              thirdPartyDelivery: thirdParty
+              }
             },
             logisticsOptimization: {
               routeOptimization,
@@ -95,12 +93,17 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
         );
 
         setImpact(res.data);
+        setThirdParty(res.data?.thirdPartyDelivery?.isUsed || false);
+
+        // 🔍 Debug logging - Remove after testing
+        console.log('📊 Impact Response:', res.data);
+        console.log('🚚 Third Party Used:', res.data?.thirdPartyDelivery?.isUsed);
+        console.log('📦 Orders Handled:', res.data?.thirdPartyDelivery?.ordersHandled);
 
         localStorage.setItem(
           STORAGE_KEY,
           JSON.stringify({
             ownFleet,
-            thirdParty,
             riderCount,
             bikeCount,
             electricPercent,
@@ -119,7 +122,7 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
     calculate();
   }, [
     ownFleet,
-    thirdParty,
+
     riderCount,
     bikeCount,
     electricPercent,
@@ -149,8 +152,7 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
             electricBikes: {
               enabled: electricPercent > 0,
               percentage: electricPercent
-            },
-            thirdPartyDelivery: thirdParty
+            }
           },
           logisticsOptimization: {
             routeOptimization,
@@ -196,16 +198,25 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
                 min={0}
                 max={100}
                 value={electricPercent}
-                onChange={(e) => setElectricPercent(+e.target.value)}
+                onChange={(e) => {
+                  const val = +e.target.value;
+                  if (val <= 100) {
+                    setElectricPercent(val);
+                  }
+                }}
                 className="w-full border px-3 py-2 rounded-lg"
               />
             </div>
           </div>
         )}
 
-        <Checkbox label="Third-Party Delivery" checked={thirdParty} set={setThirdParty} />
+        <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+          <p className="text-sm text-blue-800">
+            ℹ️ <strong>Third-Party Delivery:</strong> Will be automatically used if demand exceeds your fleet capacity. No manual selection needed.
+          </p>
+        </div>
 
-        <h3 className="text-xl font-semibold">Logistics Optimization</h3>
+        <h3 className="text-xl font-semibold">Logistics Optimization (Optional)</h3>
 
         <Checkbox label="Route Optimization Software" checked={routeOptimization} set={setRouteOptimization} />
         <Checkbox label="Real-Time Tracking" checked={realTimeTracking} set={setRealTimeTracking} />
@@ -214,7 +225,7 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
 
         <button
           onClick={handleSubmit}
-          disabled={saving || (!ownFleet && !thirdParty)}
+          disabled={saving || !ownFleet}
           className="w-full bg-blue-600 text-white py-3 rounded-xl"
         >
           {saving ? "Saving..." : "Save Delivery Setup"}
@@ -227,8 +238,24 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
           <ImpactCard title="Delivery Fleet Impact" icon="🚚" data={impact.deliveryFleet} />
         )}
 
-        {impact?.thirdPartyDelivery && (
-          <ImpactCard title="Third-Party Delivery Impact" icon="🤝" data={impact.thirdPartyDelivery} />
+        {thirdParty && (
+          <div className="rounded-2xl border bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
+                🤝
+              </div>
+              <h4 className="font-semibold">Third-Party Delivery (Auto)</h4>
+            </div>
+            <p className="text-sm text-slate-700 leading-relaxed">
+              This is being used because demand exceeds your fleet capacity. 
+              <br className="my-2" />
+              <strong>Cost:</strong> Driver and bike costs are x times higher than own fleet.
+              <br className="my-1" />
+              <strong>Benefits:</strong> Provides x% more flexibility and y% more coverage area.
+              <br className="my-1" />
+              <strong>Trade-off:</strong> Customer satisfaction reduces by z%.
+            </p>
+          </div>
         )}
 
         {impact?.logisticsOptimization && (
