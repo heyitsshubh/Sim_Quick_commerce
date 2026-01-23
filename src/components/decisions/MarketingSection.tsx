@@ -117,11 +117,11 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
   /* ================= UI ================= */
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 px-4 md:px-0">
 
       {/* LEFT */}
-      <div className="lg:col-span-2 space-y-6">
-        <h2 className="text-2xl font-bold">Marketing & Growth</h2>
+      <div className="lg:col-span-2 space-y-4 md:space-y-6">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">Marketing & Growth</h2>
 
         <Section title="Customer Acquisition">
           {Object.entries(config.acquisition).map(([key, val]: any) => {
@@ -295,7 +295,11 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
       </div>
 
       {/* RIGHT */}
-      {impact && <ImpactCard impact={impact} />}
+      {impact && (
+        <div className="hidden lg:block space-y-6 sticky top-6 h-fit">
+          <ImpactCard impact={impact} />
+        </div>
+      )}
     </div>
   );
 }
@@ -327,8 +331,8 @@ function update(state:any,set:any,section:string,key:string,field:string,value:n
 
 function Section({ title, children }: any) {
   return (
-    <div className="bg-white border rounded-2xl p-5 space-y-4">
-      <h3 className="font-semibold text-lg">{title}</h3>
+    <div className="bg-white border rounded-xl md:rounded-2xl p-4 md:p-5 space-y-3 md:space-y-4 shadow-sm">
+      <h3 className="font-semibold text-base md:text-lg">{title}</h3>
       {children}
     </div>
   );
@@ -339,12 +343,12 @@ function BudgetOption({ label, desc, data, min, max, onToggle, onChange }: any) 
   const maxValue = max ?? minValue;
   const value = data?.budget ?? minValue;
   return (
-    <div className="border rounded-xl p-4">
+    <div className="border rounded-xl p-4 bg-gradient-to-br from-white to-slate-50">
       <label className="flex gap-3">
         <input type="checkbox" checked={!!data?.enabled} onChange={onToggle} />
         <span className="font-medium">{label}</span>
       </label>
-      <p className="text-sm text-slate-600">{desc}</p>
+      <p className="text-xs md:text-sm text-slate-600">{desc}</p>
 
       {data?.enabled && (
         <div className="mt-3 space-y-1">
@@ -373,12 +377,12 @@ function CostOption({ label, desc, data, min, max, onToggle, onChange }: any) {
   const maxValue = max ?? minValue;
   const value = data?.cost ?? minValue;
   return (
-    <div className="border rounded-xl p-4">
+    <div className="border rounded-xl p-4 bg-gradient-to-br from-white to-slate-50">
       <label className="flex gap-3">
         <input type="checkbox" checked={!!data?.enabled} onChange={onToggle} />
         <span className="font-medium">{label}</span>
       </label>
-      <p className="text-sm text-slate-600">{desc}</p>
+      <p className="text-xs md:text-sm text-slate-600">{desc}</p>
 
       {data?.enabled && (
         <div className="mt-3 space-y-1">
@@ -404,7 +408,7 @@ function CostOption({ label, desc, data, min, max, onToggle, onChange }: any) {
 
 function Checkbox({ label, checked, onToggle }: any) {
   return (
-    <label className="flex gap-3 p-4 border rounded-xl cursor-pointer">
+    <label className="flex gap-3 p-4 border rounded-xl cursor-pointer bg-gradient-to-br from-white to-slate-50">
       <input type="checkbox" checked={checked} onChange={onToggle} />
       <span className="font-medium">{label}</span>
     </label>
@@ -413,11 +417,19 @@ function Checkbox({ label, checked, onToggle }: any) {
 
 function ImpactCard({ impact }: any) {
   return (
-    <div className="sticky top-6 bg-green-50 border rounded-2xl p-6">
-      <h4 className="font-semibold mb-3">Impact Summary</h4>
-      <p className="text-2xl font-bold mb-4">
+    <div className="rounded-xl md:rounded-2xl border bg-gradient-to-br from-white to-slate-50 p-4 md:p-6 shadow-md">
+      <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+        <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-green-100 text-green-700 flex items-center justify-center text-xl md:text-2xl">
+          📣
+        </div>
+        <div>
+          <h4 className="font-semibold text-sm md:text-base">Impact Summary</h4>
+          <p className="text-xs text-slate-500">Monthly impact</p>
+        </div>
+      </div>
+      <div className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">
         ₹{(impact.totalCost / 100000).toFixed(2)} L / month
-      </p>
+      </div>
     </div>
   );
 }
