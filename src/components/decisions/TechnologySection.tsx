@@ -101,6 +101,9 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
 
   if (loading || !selections) return <div>Loading Technology Setup...</div>;
 
+  const totalCostWithWebsite = (result?.totalCost || 0) + (Number(websiteBudget) || 0);
+  const extraKpi = { label: "Website Budget", value: `+${websiteBudget} L` };
+
   /* ===== UI ===== */
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -181,12 +184,13 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
             <ImpactCard
               title="Total Technology Cost"
               icon="💻"
-              cost={result.totalCost}
+              cost={totalCostWithWebsite}
               kpis={[
                 { label: "Conversion", value: `+${result.customerFacing?.kpis?.conversion || 0}%` },
                 { label: "Basket Size", value: `+${result.customerFacing?.kpis?.basketSize || 0}%` },
                 { label: "Waste Reduction", value: `${Math.abs(result.operations?.kpis?.wasteReduction || 0)}%` },
-                { label: "Decision Quality", value: `+${result.operations?.kpis?.decisionQuality || 0}%` }
+                { label: "Decision Quality", value: `+${result.operations?.kpis?.decisionQuality || 0}%` },
+                extraKpi,
               ]}
             />
           </>
@@ -231,7 +235,7 @@ function TechOption({ label, checked, required, cost, impact, onToggle }: any) {
           </div>
           {cost && (
             <div className="text-xs text-slate-600">
-              Cost: ₹{cost.max} L
+              Cost: ₹{cost.min} L
             </div>
           )}
           {impact && (
