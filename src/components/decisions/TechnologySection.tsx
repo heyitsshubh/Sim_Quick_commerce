@@ -263,7 +263,7 @@ function ImpactCard({ title, icon, cost, kpis }: any) {
       <div className="text-3xl font-bold mb-4">
         ₹{cost.toFixed(2)} L
       </div>
-
+      
       <div className="grid grid-cols-2 gap-2">
         {kpis.map((k: any) => (
           <div
