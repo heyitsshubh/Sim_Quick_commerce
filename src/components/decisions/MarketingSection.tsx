@@ -126,6 +126,7 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         <Section title="Customer Acquisition">
           {Object.entries(config.acquisition).map(([key, val]: any) => {
             const dataObj = state.acquisition[key];
+            const sliderKeys = new Set(["googleAds", "facebookAds"]);
             const labelMap: any = {
               googleAds: "Google Ads",
               facebookAds: "Facebook & Instagram",
@@ -141,7 +142,7 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
               firstOrderDiscount: "Critical conversion driver",
             };
 
-            if (val.minBudget !== undefined) {
+            if (sliderKeys.has(key) && val.minBudget !== undefined) {
               return (
                 <BudgetOption
                   key={key}
@@ -155,34 +156,7 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
                 />
               );
             }
-            if (val.minPercent !== undefined) {
-              return (
-                <PercentOption
-                  key={key}
-                  label={labelMap[key] || key}
-                  desc={descMap[key] || ""}
-                  data={dataObj}
-                  min={val.minPercent}
-                  max={val.maxPercent}
-                  onToggle={() => toggle(state, setState, "acquisition", key)}
-                  onChange={(v:number)=>update(state,setState,"acquisition",key,"percent",v)}
-                />
-              );
-            }
-            if (val.minCost !== undefined) {
-              return (
-                <CostOption
-                  key={key}
-                  label={labelMap[key] || key}
-                  desc={descMap[key] || ""}
-                  data={dataObj}
-                  min={val.minCost}
-                  max={val.maxCost}
-                  onToggle={() => toggle(state, setState, "acquisition", key)}
-                  onChange={(v:number)=>update(state,setState,"acquisition",key,"cost",v)}
-                />
-              );
-            }
+
             return (
               <Checkbox
                 key={key}
@@ -197,6 +171,7 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         <Section title="Retention">
           {Object.entries(config.retention).map(([key, val]: any) => {
             const dataObj = state.retention[key];
+            const sliderBlocked = new Set(["emailSms", "cashbackCoupons"]);
             const labelMap: any = {
               pushNotifications: "Push Notifications",
               loyaltyProgram: "Loyalty Program",
@@ -209,6 +184,17 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
               emailSms: "Lifecycle campaigns",
               cashbackCoupons: "Incentivize repeat orders",
             };
+
+            if (sliderBlocked.has(key)) {
+              return (
+                <Checkbox
+                  key={key}
+                  label={labelMap[key] || key}
+                  checked={!!dataObj?.enabled}
+                  onToggle={() => toggle(state, setState, "retention", key)}
+                />
+              );
+            }
 
             if (val.minBudget !== undefined) {
               return (
@@ -262,6 +248,17 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
               corporateTieups: "Bulk corporate partnerships",
               housingSocieties: "Society-level promotions",
             };
+
+            if (key === "housingSocieties") {
+              return (
+                <Checkbox
+                  key={key}
+                  label={labelMap[key] || key}
+                  checked={!!dataObj?.enabled}
+                  onToggle={() => toggle(state, setState, "partnerships", key)}
+                />
+              );
+            }
 
             if (val.minCost !== undefined) {
               return (
@@ -398,40 +395,6 @@ function CostOption({ label, desc, data, min, max, onToggle, onChange }: any) {
             <span>Min: ₹{minValue.toLocaleString()}</span>
             <span>Selected: ₹{value.toLocaleString()}</span>
             <span>Max: ₹{maxValue.toLocaleString()}</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PercentOption({ label, desc, data, min, max, onToggle, onChange }: any) {
-  const minValue = min ?? 0;
-  const maxValue = max ?? minValue;
-  const value = data?.percent ?? minValue;
-  return (
-    <div className="border rounded-xl p-4">
-      <label className="flex gap-3">
-        <input type="checkbox" checked={!!data?.enabled} onChange={onToggle} />
-        <span className="font-medium">{label}</span>
-      </label>
-      <p className="text-sm text-slate-600">{desc}</p>
-
-      {data?.enabled && (
-        <div className="mt-3 space-y-1">
-          <input
-            type="range"
-            min={minValue}
-            max={maxValue}
-            step={Math.max(1, Math.floor((maxValue - minValue) / 20))}
-            value={value}
-            onChange={(e) => onChange(+e.target.value)}
-            className="w-full accent-blue-600"
-          />
-          <div className="text-xs text-slate-700 flex justify-between">
-            <span>Min: {minValue}%</span>
-            <span>Selected: {value}%</span>
-            <span>Max: {maxValue}%</span>
           </div>
         </div>
       )}
