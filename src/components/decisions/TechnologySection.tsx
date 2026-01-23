@@ -185,7 +185,7 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
               kpis={[
                 { label: "Conversion", value: `+${result.customerFacing?.kpis?.conversion || 0}%` },
                 { label: "Basket Size", value: `+${result.customerFacing?.kpis?.basketSize || 0}%` },
-                { label: "Waste Reduction", value: `-${result.operations?.kpis?.wasteReduction || 0}%` },
+                { label: "Waste Reduction", value: `${Math.abs(result.operations?.kpis?.wasteReduction || 0)}%` },
                 { label: "Decision Quality", value: `+${result.operations?.kpis?.decisionQuality || 0}%` }
               ]}
             />
@@ -288,7 +288,7 @@ function formatLabel(key: string) {
 function getOperationImpact(key: string, value: any) {
   switch (key) {
     case "demandForecastingAI":
-      return [`-${value.wasteReductionPercent}% waste`, "+10% planning accuracy"];
+      return [`${Math.abs(value.wasteReductionPercent || 0)}% waste reduction`, "+10% planning accuracy"];
     case "dynamicPricing":
       return ["+8% margin", "+5% revenue uplift"];
     case "supplyChainAnalytics":
