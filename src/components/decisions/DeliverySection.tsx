@@ -206,6 +206,11 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
                 }}
                 className="w-full border px-3 py-2 rounded-lg"
               />
+              <div className="mt-2 bg-amber-50 border border-amber-200 p-3 rounded-lg">
+                <p className="text-xs md:text-sm text-amber-900 leading-relaxed">
+                  ℹ️ One bike can be used by many riders since the riders will be working in 8 hours shift. So technically, a bike can be used by 3 bikers at 8 hour shift each. Also, keep in mind that some bikes may not be available since they might be in servicing. Also, some bikers will leave the organization at the end of the month. You can increase/reduce the bikers easily. But if you are trying to reduce a bike, it will take 2 rounds.
+                </p>
+              </div>
             </div>
           </div>
         )}
