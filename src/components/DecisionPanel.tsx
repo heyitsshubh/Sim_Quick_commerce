@@ -4,6 +4,7 @@ import { ChevronRight, Store, Package, Truck, Laptop, DollarSign, TrendingUp, Us
 import type { Player } from '../types/game';
 import BusinessModelSection from './decisions/BusinessModelSection';
 import ProductCategoriesSection from './decisions/ProductCategoriesSection';
+import DarkStoresSection from './decisions/DarkStoresSection';
 import DeliverySection from './decisions/DeliverySection';
 import TechnologySection from './decisions/TechnologySection';
 import SourcingSection from './decisions/SourcingSection';
@@ -21,6 +22,7 @@ interface DecisionPanelProps {
 const SECTIONS = [
   { id: 'business', label: 'Business Model', icon: Store },
   { id: 'products', label: 'Product Categories', icon: Package },
+  { id: 'darkstores', label: 'Dark Stores', icon: Store },
   { id: 'delivery', label: 'Delivery Fleet', icon: Truck },
   { id: 'technology', label: 'Technology', icon: Laptop },
   { id: 'sourcing', label: 'Sourcing', icon: Package },
@@ -139,6 +141,12 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
             <ProductCategoriesSection
               round={round}
               onComplete={(data) => handleSectionComplete('products', data)}
+            />
+          )}
+          {activeSection === 'darkstores' && (
+            <DarkStoresSection
+              round={round}
+              onComplete={(data) => handleSectionComplete('darkstores', data)}
             />
           )}
           {activeSection === 'delivery' && (
