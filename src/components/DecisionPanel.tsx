@@ -8,7 +8,7 @@ import DarkStoresSection from './decisions/DarkStoresSection';
 import DeliverySection from './decisions/DeliverySection';
 import TechnologySection from './decisions/TechnologySection';
 import SourcingSection from './decisions/SourcingSection';
-import PricingSection from './decisions/PricingSection';
+import PricingSection from './decisions/PricingInnovationPage';
 import MarketingSection from './decisions/MarketingSection';
 import OperationsSection from './decisions/OperationsSection';
 
@@ -170,7 +170,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
           {activeSection === 'pricing' && (
             <PricingSection
               round={round}
-              onComplete={(data) => handleSectionComplete('pricing', data)}
+              onComplete={(data: any) => handleSectionComplete('pricing', data)}
             />
           )}
 
