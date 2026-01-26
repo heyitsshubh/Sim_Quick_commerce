@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { Users, Award, DollarSign, Save, TrendingUp } from "lucide-react";
+import { Users, Award, DollarSign, Save } from "lucide-react";
 import { getHRData, saveHRConfig } from "../../api/hrApi";
 import EmployeeCard from "../EmployeeCard";
 import Slider from "../Slider";
@@ -143,18 +143,6 @@ export default function OperationsSection() {
             />
           ))}
         </div>
-
-        {topManagement.length > 0 && (
-          <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-4 flex items-center gap-3">
-            <div className="bg-purple-200 p-2 rounded-lg">
-              <DollarSign size={18} className="text-purple-700" />
-            </div>
-            <div>
-              <p className="text-xs text-purple-600 font-medium">Monthly Management Cost</p>
-              <p className="text-lg font-bold text-purple-900">₹{(topManagementSalary / 100000).toFixed(1)}L</p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Employees Section */}
@@ -187,18 +175,6 @@ export default function OperationsSection() {
             />
           ))}
         </div>
-
-        {selectedEmployees.length > 0 && (
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-4 flex items-center gap-3">
-            <div className="bg-blue-200 p-2 rounded-lg">
-              <TrendingUp size={18} className="text-blue-700" />
-            </div>
-            <div>
-              <p className="text-xs text-blue-600 font-medium">Selected Team Payroll</p>
-              <p className="text-lg font-bold text-blue-900">₹{(totalSalary / 100000).toFixed(1)}L / month</p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Budget Allocation */}
