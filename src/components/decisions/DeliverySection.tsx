@@ -15,6 +15,10 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /* ================= CURRENT COUNTS FROM DB ================= */
+  const [currentRiders, setCurrentRiders] = useState(0);
+  const [currentBikes, setCurrentBikes] = useState(0);
+
   /* ================= DELIVERY FLEET ================= */
   const [ownFleet, setOwnFleet] = useState(false);
   const [riderCount, setRiderCount] = useState(50);
@@ -31,14 +35,21 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
   const [impact, setImpact] = useState<any>(null);
   const [thirdParty, setThirdParty] = useState(false);
 
-  /* ================= LOAD CONFIG + RESTORE ================= */
+  /* ================= LOAD CONFIG + RESTORE + CURRENT COUNTS ================= */
   useEffect(() => {
     const init = async () => {
       try {
-        const res = await axios.get(
+        // Load config with current totals
+        const configRes = await axios.get(
           "https://sim-quick-commerce-backend.onrender.com/api/delivery-config"
         );
-        setConfig(res.data);
+        setConfig(configRes.data);
+
+        // Extract current riders and bikes from the config response
+        if (configRes.data.currentTotals) {
+          setCurrentRiders(configRes.data.currentTotals.totalRiders || 0);
+          setCurrentBikes(configRes.data.currentTotals.totalBikers || 0);
+        }
 
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -53,8 +64,8 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
           setHyperlocalWarehousing(s.hyperlocalWarehousing);
           setImpact(s.impact);
         } else {
-          setRiderCount(res.data.ownFleet.riders.min);
-          setBikeCount(res.data.ownFleet.bikes.min);
+          setRiderCount(configRes.data.ownFleet.riders.min);
+          setBikeCount(configRes.data.ownFleet.bikes.min);
         }
       } catch {
         setError("Failed to load delivery configuration");
@@ -95,11 +106,6 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
         setImpact(res.data);
         setThirdParty(res.data?.thirdPartyDelivery?.isUsed || false);
 
-        // 🔍 Debug logging - Remove after testing
-        console.log('📊 Impact Response:', res.data);
-        console.log('🚚 Third Party Used:', res.data?.thirdPartyDelivery?.isUsed);
-        console.log('📦 Orders Handled:', res.data?.thirdPartyDelivery?.ordersHandled);
-
         localStorage.setItem(
           STORAGE_KEY,
           JSON.stringify({
@@ -122,7 +128,6 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
     calculate();
   }, [
     ownFleet,
-
     riderCount,
     bikeCount,
     electricPercent,
@@ -188,6 +193,21 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
 
         {ownFleet && (
           <div className="bg-slate-50 p-4 rounded-xl space-y-4">
+            {/* CURRENT FLEET INFO */}
+            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+              <p className="text-sm font-medium text-blue-900 mb-2">ℹ️ Current Fleet Status (All Players):</p>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="bg-white p-2 rounded">
+                  <span className="text-slate-600">Total Riders:</span>
+                  <span className="font-bold ml-2 text-blue-600">{currentRiders}</span>
+                </div>
+                <div className="bg-white p-2 rounded">
+                  <span className="text-slate-600">Total Bikes:</span>
+                  <span className="font-bold ml-2 text-blue-600">{currentBikes}</span>
+                </div>
+              </div>
+            </div>
+
             <Range label="Riders per City" value={riderCount} min={50} max={1000} set={setRiderCount} />
             <Range label="Bikes per City" value={bikeCount} min={50} max={1000} set={setBikeCount} />
 
@@ -231,7 +251,7 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
         <button
           onClick={handleSubmit}
           disabled={saving || !ownFleet}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl"
+          className="w-full bg-blue-600 text-white py-3 rounded-xl disabled:bg-gray-400 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
         >
           {saving ? "Saving..." : "Save Delivery Setup"}
         </button>
@@ -243,7 +263,7 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
           <ImpactCard title="Delivery Fleet Impact" icon="🚚" data={impact.deliveryFleet} />
         )}
 
-        {thirdParty && (
+        {thirdParty && impact?.thirdPartyDelivery && (
           <div className="rounded-2xl border bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
@@ -251,15 +271,14 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
               </div>
               <h4 className="font-semibold">Third-Party Delivery (Auto)</h4>
             </div>
-            <p className="text-sm text-slate-700 leading-relaxed">
-              This is being used because demand exceeds your fleet capacity. 
-              <br className="my-2" />
-              <strong>Cost:</strong> Driver and bike costs are x times higher than own fleet.
-              <br className="my-1" />
-              <strong>Benefits:</strong> Provides x% more flexibility and y% more coverage area.
-              <br className="my-1" />
-              <strong>Trade-off:</strong> Customer satisfaction reduces by z%.
-            </p>
+            <div className="space-y-2 text-sm text-slate-700">
+              <p>
+                <strong>Monthly Cost:</strong> ₹{(impact.thirdPartyDelivery.cost / 100000).toFixed(2)} L
+              </p>
+              <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded">
+                ℹ️ Automatically activated because demand exceeds fleet capacity
+              </p>
+            </div>
           </div>
         )}
 
@@ -267,7 +286,7 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
           <ImpactCard title="Logistics Optimization Impact" icon="⚙️" data={impact.logisticsOptimization} />
         )}
 
-        {impact?.totalCost && (
+        {impact?.totalCost !== undefined && (
           <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white shadow-lg">
             <div className="text-sm opacity-90">Total Monthly Cost</div>
             <div className="text-3xl font-bold">
@@ -284,8 +303,8 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
 
 function Checkbox({ label, checked, set }: any) {
   return (
-    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer">
-      <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} />
+    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+      <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} className="w-5 h-5" />
       <span className="font-medium">{label}</span>
     </label>
   );
@@ -294,7 +313,7 @@ function Checkbox({ label, checked, set }: any) {
 function Range({ label, value, min, max, set }: any) {
   return (
     <div>
-      <label className="text-sm font-medium">{label}</label>
+      <label className="text-sm font-medium block mb-2">{label}</label>
       <input
         type="range"
         min={min}
@@ -304,7 +323,7 @@ function Range({ label, value, min, max, set }: any) {
         onChange={(e) => set(+e.target.value)}
         className="w-full"
       />
-      <div className="text-sm text-slate-600">{value}</div>
+      <div className="text-sm text-slate-600 font-semibold mt-1">{value}</div>
     </div>
   );
 }
@@ -340,9 +359,14 @@ function ImpactCard({ title, data, icon }: any) {
 }
 
 function KpiPill({ label, value }: any) {
+  const isNegative = value < 0;
   return (
-    <div className="rounded-full bg-green-100 text-green-700 px-3 py-1 text-xs font-semibold">
-      +{value}% {label.replace(/([A-Z])/g, " $1")}
+    <div className={`rounded-full px-3 py-1 text-xs font-semibold ${
+      isNegative 
+        ? 'bg-red-100 text-red-700' 
+        : 'bg-green-100 text-green-700'
+    }`}>
+      {isNegative ? '' : '+'}{value}% {label.replace(/([A-Z])/g, " $1")}
     </div>
   );
 }
