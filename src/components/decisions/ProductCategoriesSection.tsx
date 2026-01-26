@@ -149,34 +149,6 @@ export default function ProductCategoriesSection({
     return (
       <div>
         <h2 className="text-2xl font-bold mb-2">Product Categories</h2>
-        <p className="text-slate-600 mb-6">Select product categories</p>
-
-        <div className="space-y-3">
-          {categories.map((category) => {
-            const selection = selections[category._id];
-            const enabled = !!selection?.enabled;
-
-            return (
-              <label
-                key={category._id}
-                className="flex items-center justify-between gap-3 cursor-pointer p-3 border rounded-lg hover:bg-slate-50"
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={enabled}
-                    onChange={() => toggleCategory(category)}
-                    className="w-4 h-4"
-                  />
-                  <span className="font-medium text-slate-700">{category.name}</span>
-                </div>
-                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
-                  {category.baseMonthlyDemand ?? "-"}
-                </span>
-              </label>
-            );
-          })}
-        </div>
       </div>
     );
   }

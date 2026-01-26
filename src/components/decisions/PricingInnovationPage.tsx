@@ -46,28 +46,67 @@ export default function PricingInnovationPage({ round, onComplete }: any) {
   );
 
   /* ================= SAVE ================= */
-  const handleSave = async () => {
-    setSaving(true);
-    await axios.post(
-      "https://sim-quick-commerce-backend.onrender.com/api/pricing/save",
-      {
-        userId: localStorage.getItem("userId"),
-        simulationId: localStorage.getItem("simulationId"),
-        round,
-        categories: pricingCategories.map(cat => ({
-          ...cat,
-          qualityLevel: globalQualityLevel,
-          price: Math.round(cat.basePrice * marginMultiplier)
-        })),
-        selectedFeatures,
-        rdInvestment,
-        marginMultiplier,
-        globalQualityLevel
-      }
-    );
-    setSaving(false);
-    onComplete();
+const handleSave = async () => {
+  setSaving(true);
+const pricingCategoriesData = pricingCategories.map(cat => {
+  const qualityMultiplier =
+    config?.qualityMultipliers?.[globalQualityLevel] ?? 1;
+
+  const safeMargin =
+    typeof marginMultiplier === "number"
+      ? marginMultiplier
+      : 1;
+
+  const baseMonthlyDemand =
+    typeof cat.baseMonthlyDemand === "number"
+      ? cat.baseMonthlyDemand
+      : 0;
+
+  // ✅ YOUR REQUIRED FORMULAS
+  const qualityPrice =
+    baseMonthlyDemand * qualityMultiplier;
+
+  const finalSellingPrice =
+    baseMonthlyDemand * safeMargin;
+
+  const monthlyRevenue =
+    finalSellingPrice * baseMonthlyDemand;
+
+  return {
+    categoryId: cat.categoryId,
+    name: cat.name,
+
+    baseMonthlyDemand,
+
+    qualityLevel: globalQualityLevel,
+    qualityMultiplier,
+    qualityPrice,
+
+    marginMultiplier: safeMargin,
+    finalSellingPrice,
+
+    monthlyRevenue
   };
+});
+
+
+  await axios.post(
+    "https://sim-quick-commerce-backend.onrender.com/api/pricing/save",
+    {
+      userId: localStorage.getItem("userId"),
+      simulationId: localStorage.getItem("simulationId"),
+      round,
+      categories: pricingCategoriesData,
+      selectedFeatures,
+      rdInvestment
+    }
+  );
+
+  setSaving(false);
+  onComplete();
+};
+
+
 
   /* ================= UI ================= */
   return (
@@ -102,7 +141,7 @@ export default function PricingInnovationPage({ round, onComplete }: any) {
                   <span className="font-medium">{cat.name}</span>
                   <div className="text-right">
                     <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
-                    <p className="text-lg font-bold text-blue-600">Adjusted: {adjustedDemand}</p>
+                    <p className="text-lg font-bold text-blue-600">Final Buying Price:{adjustedDemand}</p>
                   </div>
                 </div>
               );
@@ -142,12 +181,16 @@ export default function PricingInnovationPage({ round, onComplete }: any) {
                   <div className="flex justify-between items-center">
                     <div>
                       <h5 className="font-medium text-lg">{cat.name}</h5>
-                      <p className="text-sm text-slate-600">Base Price: ₹{cat.baseMonthlyDemand}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-slate-600">Final Price</p>
+                    {/* <div className="text-right">
+                      <p className="text-sm text-slate-600">Final Selling Price</p>
                       <p className="text-2xl font-bold text-green-600">₹{calculatedPrice}</p>
-                    </div>
+                      
+                    </div> */}
+                     <div className="text-right">
+                    <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
+                    <p className="text-lg font-bold text-blue-600">Final Selling Price:₹{calculatedPrice}</p>
+                  </div>
                   </div>
                 </div>
               );
