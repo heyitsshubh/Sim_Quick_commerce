@@ -106,7 +106,7 @@ export default function OperationsSection() {
               <Users size={32} className="text-white" />
             </div>
             <div>
-              <h2 className="text-4xl font-bold tracking-tight">HR Management</h2>
+              <h2 className="text-4xl font-bold tracking-tight">HR & Operations</h2>
               <p className="text-blue-100 text-sm mt-1">Build and develop your team</p>
             </div>
           </div>
