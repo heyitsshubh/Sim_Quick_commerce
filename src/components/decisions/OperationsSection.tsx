@@ -1,221 +1,254 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { Users, Award, DollarSign, Save, TrendingUp } from "lucide-react";
+import { getHRData, saveHRConfig } from "../../api/hrApi";
+import EmployeeCard from "../EmployeeCard";
+import Slider from "../Slider";
 
-const STORAGE_KEY = "step9_operations_state";
-
-interface OperationsSectionProps {
-  round: number;
-  onComplete: (data: any) => void;
-}
-
-export default function OperationsSection({ round, onComplete }: OperationsSectionProps) {
-  const [config, setConfig] = useState<any>(null);
-  const [impact, setImpact] = useState<any>(null);
-  const [saving, setSaving] = useState(false);
-
-  const [state, setState] = useState<any>({
-    darkStoreStaff: {
-      storeManager: 1,
-      pickersPackers: 10,
-      inventoryStaff: 2,
-      qualityCheckers: 1,
-      cleaningStaff: 1
-    },
-    deliveryStaff: {
-      deliveryRiders: 50,
-      riderSupervisors: 5
-    },
-    corporateTeam: {
-      techTeam: 10,
-      marketingTeam: 5,
-      customerSupport: 10
-    }
-  });
-
-  /* ================= LOAD CONFIG + RESTORE ================= */
-
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await axios.get(
-        "https://sim-quick-commerce-backend.onrender.com/api/operations-staffing-config"
-      );
-      setConfig(data);
-
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setState(JSON.parse(saved));
-    };
-    load();
-  }, []);
-
-  /* ================= LIVE CALCULATION ================= */
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-
-    axios
-      .post(
-        "https://sim-quick-commerce-backend.onrender.com/api/step-nine/calculate",
-        state
-      )
-      .then(res => setImpact(res.data))
-      .catch(() => {});
-  }, [state]);
-
-  /* ================= SAVE ================= */
-
-  const handleSave = async () => {
-    setSaving(true);
-
-    await axios.post(
-      "https://sim-quick-commerce-backend.onrender.com/api/step-nine/save",
-      {
-        userId: localStorage.getItem("userId"),
-        simulationId: localStorage.getItem("simulationId"),
-        roundNumber: round,
-        ...state
-      }
-    );
-
-    onComplete({ ...state, impact });
-    setSaving(false);
+export default function OperationsSection() {
+  type Employee = {
+    _id: string;
+    name: string;
+    role: string;
+    expertise: string;
+    profileImage: string;
+    salaryPerMonth: number;
+    [key: string]: any;
   };
 
-  if (!config) return <div>Loading operations setup...</div>;
+  const [topManagement, setTopManagement] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [training, setTraining] = useState(0);
+  const [bonus, setBonus] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  /* ================= UI ================= */
+  useEffect(() => {
+    getHRData().then((res: any) => {
+      setTopManagement(res.data.topManagement);
+      setEmployees(res.data.employees);
+      setLoading(false);
+    });
+  }, []);
+
+  const toggleEmployee = (id: string) => {
+    setSelectedEmployees(prev =>
+      prev.includes(id)
+        ? prev.filter(x => x !== id)
+        : [...prev, id]
+    );
+  };
+
+  const totalSalary = employees
+    .filter(e => selectedEmployees.includes(e._id))
+    .reduce((sum, e) => sum + e.salaryPerMonth, 0);
+
+  const topManagementSalary = topManagement.reduce((sum, e) => sum + e.salaryPerMonth, 0);
+
+  const totalTrainingCost = selectedEmployees.length * training;
+  const totalBonusCost = selectedEmployees.length * bonus;
+  const totalHRCost = totalSalary + topManagementSalary + totalTrainingCost + totalBonusCost;
+
+  // Display total HR cost
+  <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+    <div className="bg-green-200 p-2 rounded-lg">
+      <DollarSign size={18} className="text-green-700" />
+    </div>
+    <div>
+      <p className="text-xs text-green-600 font-medium">Total HR Cost</p>
+      <p className="text-lg font-bold text-green-900">₹{(totalHRCost / 100000).toFixed(1)}L / month</p>
+    </div>
+  </div>
+
+  const submitHR = async () => {
+    try {
+      setSaving(true);
+      const res = await saveHRConfig({
+        selectedEmployees,
+        trainingBudgetPerEmployee: training,
+        bonusPerEmployee: bonus
+      });
+
+      console.log(res.data.summary);
+      alert("HR configuration saved successfully!");
+    } catch (error) {
+      console.error("Failed to save HR config", error);
+      alert("Failed to save HR configuration");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center space-y-4">
+          <div className="inline-block animate-spin">
+            <Users className="text-blue-600" size={40} />
+          </div>
+          <p className="text-slate-600 font-medium">Loading HR data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* LEFT */}
-      <div className="lg:col-span-2 space-y-6">
-        <h2 className="text-2xl font-bold">Operations & Staffing</h2>
-
-        <Section title="Dark Store Staff (Per Store)">
-          <Slider label="Store Manager" min={1} max={1}
-            value={state.darkStoreStaff.storeManager}
-            set={(v: number) =>
-              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,storeManager:v}}))
-            }
-          />
-          <Slider label="Pickers / Packers" min={5} max={30}
-            value={state.darkStoreStaff.pickersPackers}
-            set={(v: number) =>
-              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,pickersPackers:v}}))
-            }
-          />
-          <Slider label="Inventory Staff" min={2} max={8}
-            value={state.darkStoreStaff.inventoryStaff}
-            set={(v: number) =>
-              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,inventoryStaff:v}}))
-            }
-          />
-          <Slider label="Quality Checkers" min={1} max={4}
-            value={state.darkStoreStaff.qualityCheckers}
-            set={(v: number) =>
-              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,qualityCheckers:v}}))
-            }
-          />
-          <Slider label="Cleaning / Maintenance" min={1} max={3}
-            value={state.darkStoreStaff.cleaningStaff}
-            set={(v: number) =>
-              setState((p:any)=>({...p,darkStoreStaff:{...p.darkStoreStaff,cleaningStaff:v}}))
-            }
-          />
-        </Section>
-
-        <Section title="Delivery Staff (Per City)">
-          <Slider label="Delivery Riders" min={50} max={1000}
-            value={state.deliveryStaff.deliveryRiders}
-            set={(v: number) =>
-              setState((p:any)=>({...p,deliveryStaff:{...p.deliveryStaff,deliveryRiders:v}}))
-            }
-          />
-          <Slider label="Rider Supervisors" min={5} max={50}
-            value={state.deliveryStaff.riderSupervisors}
-            set={(v: number) =>
-              setState((p:any)=>({...p,deliveryStaff:{...p.deliveryStaff,riderSupervisors:v}}))
-            }
-          />
-        </Section>
-
-        <Section title="Corporate Team">
-          <Slider label="Technology Team" min={10} max={50}
-            value={state.corporateTeam.techTeam}
-            set={(v: number) =>
-              setState((p:any)=>({...p,corporateTeam:{...p.corporateTeam,techTeam:v}}))
-            }
-          />
-          <Slider label="Marketing Team" min={5} max={25}
-            value={state.corporateTeam.marketingTeam}
-            set={(v: number) =>
-              setState((p:any)=>({...p,corporateTeam:{...p.corporateTeam,marketingTeam:v}}))
-            }
-          />
-          <Slider label="Customer Support" min={10} max={100}
-            value={state.corporateTeam.customerSupport}
-            set={(v: number) =>
-              setState((p:any)=>({...p,corporateTeam:{...p.corporateTeam,customerSupport:v}}))
-            }
-          />
-        </Section>
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl"
-        >
-          {saving ? "Saving..." : "Save Operations Plan"}
-        </button>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-3xl p-8 text-white shadow-xl overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+              <Users size={32} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold tracking-tight">HR Management</h2>
+              <p className="text-blue-100 text-sm mt-1">Build and develop your team</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* RIGHT – IMPACT */}
-      {impact && (
-        <div className="sticky top-6 bg-gradient-to-br from-blue-50 to-green-50 border rounded-2xl p-6 shadow-sm">
-          <h4 className="font-semibold text-lg mb-3">Impact Summary</h4>
-
-          <p className="text-2xl font-bold mb-4">
-            ₹{(impact.totalCost / 100000).toFixed(2)} L / month
-          </p>
-
-          <ul className="space-y-2 text-sm">
-            <li>⚡ Speed +{impact.kpis.speed}%</li>
-            {/* <li>📦 Fulfillment +{impact.kpis.fulfillment}%</li> */}
-            <li>📈 Scalability +{impact.kpis.scalability}%</li>
-            <li>😊 Customer Satisfaction +{impact.kpis.customerSatisfaction}%</li>
-            <li>✅ Quality +{impact.kpis.quality}%</li>
-          </ul>
+      {/* Top Management Section */}
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 p-2.5 rounded-xl">
+              <Award size={22} className="text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">Top Management</h3>
+              <p className="text-xs text-slate-500">Mandatory team members</p>
+            </div>
+          </div>
+          <div className="sm:ml-auto">
+            <span className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+              {topManagement.length} members
+            </span>
+          </div>
         </div>
-      )}
-    </div>
-  );
-}
 
-/* ================= UI COMPONENTS ================= */
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {topManagement.map(emp => (
+            <EmployeeCard
+              key={emp._id}
+              emp={emp}
+              selected={true}
+              fixed={true}
+              onToggle={() => {}}
+            />
+          ))}
+        </div>
 
-function Section({ title, children }: any) {
-  return (
-    <div className="bg-white border rounded-2xl p-5 space-y-4">
-      <h3 className="font-semibold text-lg">{title}</h3>
-      {children}
-    </div>
-  );
-}
+        {topManagement.length > 0 && (
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-4 flex items-center gap-3">
+            <div className="bg-purple-200 p-2 rounded-lg">
+              <DollarSign size={18} className="text-purple-700" />
+            </div>
+            <div>
+              <p className="text-xs text-purple-600 font-medium">Monthly Management Cost</p>
+              <p className="text-lg font-bold text-purple-900">₹{(topManagementSalary / 100000).toFixed(1)}L</p>
+            </div>
+          </div>
+        )}
+      </div>
 
-function Slider({ label, min, max, value, set }: any) {
-  return (
-    <div>
-      <label className="text-sm font-medium">
-        {label}: <b>{value}</b>
-      </label>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => set(+e.target.value)}
-        className="w-full"
-      />
+      {/* Employees Section */}
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2.5 rounded-xl">
+              <Users size={22} className="text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">Build Your Team</h3>
+              <p className="text-xs text-slate-500">Select employees to hire</p>
+            </div>
+          </div>
+          <div className="sm:ml-auto">
+            <span className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+              {selectedEmployees.length} / {employees.length} selected
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {employees.map(emp => (
+            <EmployeeCard
+              key={emp._id}
+              emp={emp}
+              selected={selectedEmployees.includes(emp._id)}
+              onToggle={toggleEmployee}
+              fixed={false}
+            />
+          ))}
+        </div>
+
+        {selectedEmployees.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-4 flex items-center gap-3">
+            <div className="bg-blue-200 p-2 rounded-lg">
+              <TrendingUp size={18} className="text-blue-700" />
+            </div>
+            <div>
+              <p className="text-xs text-blue-600 font-medium">Selected Team Payroll</p>
+              <p className="text-lg font-bold text-blue-900">₹{(totalSalary / 100000).toFixed(1)}L / month</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Budget Allocation */}
+      <div className="space-y-6 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="bg-green-100 p-2.5 rounded-xl">
+            <DollarSign size={24} className="text-green-600" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-800">Budget Allocation</h3>
+            <p className="text-xs text-slate-500">Employee benefits & development</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Slider
+            label="Training Budget per Employee"
+            value={training}
+            max={50000}
+            onChange={setTraining}
+            icon="📚"
+          />
+
+          <Slider
+            label="Bonus per Employee"
+            value={bonus}
+            max={100000}
+            onChange={setBonus}
+            icon="🎁"
+          />
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <button
+        onClick={submitHR}
+        disabled={saving || selectedEmployees.length === 0}
+        className={`
+          w-full py-4 rounded-2xl font-bold text-base transition-all duration-300
+          flex items-center justify-center gap-3 shadow-lg
+          ${
+            saving || selectedEmployees.length === 0
+              ? "bg-slate-300 text-slate-600 cursor-not-allowed shadow-sm"
+              : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl active:scale-95"
+          }
+        `}
+      >
+        <Save size={20} />
+        <span>{saving ? "Saving HR Plan..." : "Save HR Plan"}</span>
+      </button>
     </div>
   );
 }
