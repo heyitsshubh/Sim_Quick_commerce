@@ -14,6 +14,7 @@ export default function PricingInnovationPage({ round, onComplete }: any) {
   const [qualityLevel, setQualityLevel] = useState(3);
   const [rdInvestment, setRdInvestment] = useState(0);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [prices, setPrices] = useState<any>({});
   const [marginMultiplier, setMarginMultiplier] = useState(2.5);
   const [saving, setSaving] = useState(false);
@@ -89,12 +90,13 @@ export default function PricingInnovationPage({ round, onComplete }: any) {
       {/* LEFT */}
       <div className="lg:col-span-2 space-y-6">
         <h2 className="text-3xl font-bold">Pricing & Innovation</h2>
-
-        <QualitySelector
+      <QualitySelector
           value={qualityLevel}
           maxAllowed={7}
           onChange={setQualityLevel}
           config={config}
+          selectedCategories={selectedCategories}
+          onCategoryChange={setSelectedCategories}
         />
 
         <RDInvestmentSlider
