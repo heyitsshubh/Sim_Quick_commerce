@@ -1,66 +1,68 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 export default function FeatureCatalog({
   features,
   selected,
-  budget,
   onToggle,
-  round = 1,
+  round
 }: any) {
-  const spent = selected.reduce((sum: number, k: string) => {
-    const f = features.find((x: any) => x.key === k);
-    return sum + (f?.cost || 0);
-  }, 0);
-
-  const lockedForRound = round === 1;
+  const disabledAll = round === 1;
 
   return (
-    <div className="bg-white border rounded-2xl p-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Feature Catalog</h3>
-        {lockedForRound && (
-          <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
-            Available from next round
-          </span>
-        )}
-      </div>
+    <div className="bg-white border rounded-2xl p-5 space-y-4">
+      <h3 className="font-semibold text-lg">Feature Catalog</h3>
 
-      <div className="space-y-3">
-        {features.map((f: any) => {
-          const overBudget = spent + f.cost > budget && !selected.includes(f.key);
-          const disabled = lockedForRound || overBudget;
-
-          return (
-            <label
-              key={f.key}
-              className={`flex justify-between items-center p-3 border rounded-xl transition ${
-                disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-slate-300"
-              }`}
-            >
-              <div>
-                <div className="font-medium">{f.name}</div>
-                <div className="text-xs text-slate-600">{f.benefit}</div>
-                <div className="text-xs text-slate-500">Cost: ₹{(f.cost / 100000).toFixed(1)} L</div>
-              </div>
-
-              <input
-                type="checkbox"
-                checked={selected.includes(f.key)}
-                disabled={disabled}
-                onChange={() => onToggle(f.key)}
-              />
-            </label>
-          );
-        })}
-      </div>
-
-      <div className="mt-1 text-sm text-slate-700">
-        Budget Used: ₹{(spent / 100000).toFixed(1)} L / {(budget / 100000).toFixed(1)} L
-      </div>
-      {lockedForRound && (
-        <div className="text-xs text-slate-500">
-          Note: R&D budget allocated this round will be available from the next round.
+      {disabledAll && (
+        <div className="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm">
+          Features unlock from <b>Round 2</b> based on R&D investment.
         </div>
       )}
+
+      {features.map((f: any) => {
+        const checked = selected.includes(f.key);
+
+        return (
+          <label
+            key={f.key}
+            className={`flex items-start gap-4 p-4 border rounded-xl transition
+              ${
+                disabledAll
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer hover:border-slate-400"
+              }
+              ${
+                checked && !disabledAll
+                  ? "border-emerald-500 bg-emerald-50"
+                  : "border-slate-200"
+              }
+            `}
+          >
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={checked}
+              disabled={disabledAll}          // 🔒 LOCK
+              onChange={() => onToggle(f.key)}
+            />
+
+            <div className="flex-1">
+              <div className="flex justify-between items-start">
+                <h4 className="font-semibold text-slate-900">
+                  {f.name}
+                </h4>
+
+                <span className="text-sm font-medium text-slate-700">
+                  ₹{(f.cost / 100000).toFixed(1)} L
+                </span>
+              </div>
+
+              <p className="text-sm text-slate-600 mt-1">
+                {f.benefit}
+              </p>
+            </div>
+          </label>
+        );
+      })}
     </div>
   );
 }

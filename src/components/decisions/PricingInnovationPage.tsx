@@ -2,139 +2,182 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-import QualitySelector from "../QualitySelector";
-import RDInvestmentSlider from "../RDInvestmentSlider";
 import FeatureCatalog from "../FeatureCatalog";
-import PriceSliders from "../PriceSliders";
+import RDInvestmentSlider from "../RDInvestmentSlider";
+import QualitySelector from "../QualitySelector";
+import ProductCategoriesSection from "./ProductCategoriesSection";
 
 export default function PricingInnovationPage({ round, onComplete }: any) {
-  const [config, setConfig] = useState<any>(null);
+  const [categories, setCategories] = useState<any[]>([]);
   const [features, setFeatures] = useState<any[]>([]);
-
-  const [qualityLevel, setQualityLevel] = useState(3);
-  const [rdInvestment, setRdInvestment] = useState(0);
+  const [config, setConfig] = useState<any>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [prices, setPrices] = useState<any>({});
-  const [marginMultiplier, setMarginMultiplier] = useState(2.5);
+  const [rdInvestment, setRdInvestment] = useState(0);
+  const [marginMultiplier, setMarginMultiplier] = useState(1.2);
+  const [globalQualityLevel, setGlobalQualityLevel] = useState(3);
   const [saving, setSaving] = useState(false);
 
-  /* ================= LOAD CONFIG ================= */
+  /* ================= LOAD DATA ================= */
   useEffect(() => {
     axios
+      .get("https://sim-quick-commerce-backend.onrender.com/api/pricing/categories")
+      .then(res => {
+        setCategories(
+          res.data.map((c: any) => ({
+            categoryId: c._id,
+            name: c.name,
+            basePrice: c.basePrice || 200,
+            baseMonthlyDemand: c.baseMonthlyDemand,
+          }))
+        );
+      });
+
+    axios
       .get("https://sim-quick-commerce-backend.onrender.com/api/pricing/config")
-      .then((res) => {
-        const cfg = res.data.config;
-        const mm = cfg?.marginMultiplier ?? 2.5;
-
-        setConfig(cfg);
+      .then(res => {
         setFeatures(res.data.features);
-        setMarginMultiplier(mm);
-
-        // initialize prices using margin multiplier
-        if (cfg?.basePrices) {
-          const initialPrices = Object.fromEntries(
-            Object.entries(cfg.basePrices).map(([k, v]: [string, any]) => [
-              k,
-              Math.round((v as number) * mm)
-            ])
-          );
-          setPrices(initialPrices);
-        }
+        setConfig(res.data.config);
       });
   }, []);
 
-  /* ================= CALCULATE ================= */
-  useEffect(() => {
-    if (!config) return;
-
-    axios
-      .post(
-        "https://sim-quick-commerce-backend.onrender.com/api/pricing/calculate",
-        {
-          qualityLevel,
-          selectedFeatures,
-          prices,
-          marginMultiplier
-        }
-      )
-      .catch(() => {});
-  }, [config, qualityLevel, selectedFeatures, prices, marginMultiplier]);
+  const pricingCategories = categories.filter(c =>
+    selectedCategories.includes(c.name.toLowerCase())
+  );
 
   /* ================= SAVE ================= */
   const handleSave = async () => {
     setSaving(true);
-
     await axios.post(
       "https://sim-quick-commerce-backend.onrender.com/api/pricing/save",
       {
         userId: localStorage.getItem("userId"),
         simulationId: localStorage.getItem("simulationId"),
         round,
-        qualityLevel,
-        rdInvestment,
+        categories: pricingCategories.map(cat => ({
+          ...cat,
+          qualityLevel: globalQualityLevel,
+          price: Math.round(cat.basePrice * marginMultiplier)
+        })),
         selectedFeatures,
-        prices,
-        marginMultiplier
+        rdInvestment,
+        marginMultiplier,
+        globalQualityLevel
       }
     );
-
     setSaving(false);
     onComplete();
   };
 
-  if (!config) return <div>Loading Pricing & Innovation...</div>;
-
+  /* ================= UI ================= */
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* LEFT */}
-      <div className="lg:col-span-2 space-y-6">
-        <h2 className="text-3xl font-bold">Pricing & Innovation</h2>
-      <QualitySelector
-          value={qualityLevel}
-          maxAllowed={7}
-          onChange={setQualityLevel}
-          config={config}
-          selectedCategories={selectedCategories}
-          onCategoryChange={setSelectedCategories}
-        />
+    <div className="space-y-6">
+      {/* PART 1: PRODUCT CATEGORIES SELECTION */}
+      <ProductCategoriesSection
+        round={round}
+        onComplete={() => {}}
+        onCategorySelectionChange={setSelectedCategories}
+        showMinimal={true}
+      />
 
-        <RDInvestmentSlider
-          value={rdInvestment}
-          onChange={setRdInvestment}
-        />
+      {/* PART 2: GLOBAL QUALITY SELECTOR (Only Once) */}
+      {pricingCategories.length > 0 && (
+        <div className="bg-white border rounded-2xl p-5">
+          <h3 className="font-bold text-lg mb-4">Select Quality Level (Applied to All Categories)</h3>
+          <QualitySelector
+            value={globalQualityLevel}
+            onChange={(v: number) => setGlobalQualityLevel(v)}
+            config={config}
+          />
 
-        <FeatureCatalog
-          features={features}
-          selected={selectedFeatures}
-          budget={rdInvestment}
-          onToggle={(key: string) =>
-            setSelectedFeatures((p) =>
-              p.includes(key) ? p.filter((k) => k !== key) : [...p, key]
-            )
-          }
-        />
+          {/* Show adjusted demand for each category */}
+          <div className="mt-6 space-y-3">
+            <h4 className="font-semibold text-slate-700">Adjusted Demand by Category:</h4>
+            {pricingCategories.map(cat => {
+              const multiplier = config?.qualityMultipliers?.[globalQualityLevel.toString()] || 1;
+              const adjustedDemand = Math.round(cat.baseMonthlyDemand * multiplier);
+              
+              return (
+                <div key={cat.categoryId} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                  <span className="font-medium">{cat.name}</span>
+                  <div className="text-right">
+                    <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
+                    <p className="text-lg font-bold text-blue-600">Adjusted: {adjustedDemand}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-        <PriceSliders
-          prices={prices}
-          basePrices={config?.basePrices}
-          marginMultiplier={marginMultiplier}
-          onMarginChange={setMarginMultiplier}
-          onChange={(cat: string, value: number) =>
-            setPrices((p: any) => ({ ...p, [cat]: value }))
-          }
-        />
+      {/* PART 3: MARGIN MULTIPLIER INPUT & CALCULATED PRICES */}
+      {pricingCategories.length > 0 && (
+        <div className="bg-white border rounded-2xl p-6">
+          <h3 className="font-bold text-lg mb-4">Set Margin Multiplier</h3>
+          
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border">
+            <label className="block text-sm font-medium mb-2">Margin Multiplier</label>
+            <input
+              type="number"
+              min={0.5}
+              max={5}
+              step={0.1}
+              value={marginMultiplier}
+              onChange={(e) => setMarginMultiplier(+e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg text-lg font-semibold"
+            />
+            <p className="text-xs text-slate-600 mt-2">
+              Enter a multiplier to calculate final prices based on base prices
+            </p>
+          </div>
 
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold"
-        >
-          {saving ? "Saving..." : "Save Pricing Strategy"}
-        </button>
-      </div>
+          <div className="space-y-4">
+            <h4 className="font-semibold text-slate-700">Calculated Prices:</h4>
+            {pricingCategories.map(cat => {
+              const calculatedPrice = Math.round(cat.baseMonthlyDemand * marginMultiplier);
+              
+              return (
+                <div key={cat.categoryId} className="border rounded-xl p-4 bg-slate-50">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h5 className="font-medium text-lg">{cat.name}</h5>
+                      <p className="text-sm text-slate-600">Base Price: ₹{cat.baseMonthlyDemand}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-slate-600">Final Price</p>
+                      <p className="text-2xl font-bold text-green-600">₹{calculatedPrice}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-      {/* RIGHT */}
+      <RDInvestmentSlider value={rdInvestment} onChange={setRdInvestment} />
+
+      <FeatureCatalog
+        features={features}
+        selected={selectedFeatures}
+        round={round}
+        onToggle={(key: string) =>
+          setSelectedFeatures(prev =>
+            prev.includes(key)
+              ? prev.filter(k => k !== key)
+              : [...prev, key]
+          )
+        }
+      />
+
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all"
+      >
+        {saving ? "Saving..." : "Save Pricing Strategy"}
+      </button>
     </div>
   );
 }

@@ -8,6 +8,8 @@ import ImpactPie from '../charts/ImpactPies';
 interface ProductCategoriesSectionProps {
   round: number;
   onComplete: (data: any) => void;
+  onCategorySelectionChange?: (selectedCategoryNames: string[]) => void; // NEW
+  showMinimal?: boolean;
 }
 
 type InventoryRange = {
@@ -34,6 +36,8 @@ type SelectionState = Record<
 export default function ProductCategoriesSection({
   round,
   onComplete,
+  onCategorySelectionChange, // NEW
+   showMinimal = false,
 }: ProductCategoriesSectionProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [marketPie, setMarketPie] = useState<any[]>([]);
@@ -65,6 +69,21 @@ export default function ProductCategoriesSection({
 
     fetchAll();
   }, []);
+
+  // NEW: Notify parent whenever selections change
+  useEffect(() => {
+    if (!onCategorySelectionChange || categories.length === 0) return;
+    
+    const selectedNames = Object.entries(selections)
+      .filter(([, v]) => v.enabled)
+      .map(([id]) => {
+        const cat = categories.find(c => c._id === id);
+        return cat?.name.toLowerCase() || '';
+      })
+      .filter(Boolean);
+    
+    onCategorySelectionChange(selectedNames);
+  }, [selections, categories, onCategorySelectionChange]);
 
   const toggleCategory = (category: Category) => {
     setSelections({
@@ -125,6 +144,44 @@ export default function ProductCategoriesSection({
   };
 
   if (loading) return <div>Loading...</div>;
+
+  if (showMinimal) {
+    return (
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Product Categories</h2>
+        <p className="text-slate-600 mb-6">Select product categories</p>
+
+        <div className="space-y-3">
+          {categories.map((category) => {
+            const selection = selections[category._id];
+            const enabled = !!selection?.enabled;
+
+            return (
+              <label
+                key={category._id}
+                className="flex items-center justify-between gap-3 cursor-pointer p-3 border rounded-lg hover:bg-slate-50"
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={enabled}
+                    onChange={() => toggleCategory(category)}
+                    className="w-4 h-4"
+                  />
+                  <span className="font-medium text-slate-700">{category.name}</span>
+                </div>
+                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+                  {category.baseMonthlyDemand ?? "-"}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div>
