@@ -27,7 +27,7 @@ const SECTIONS = [
   { id: 'technology', label: 'Technology', icon: Laptop },
   { id: 'sourcing', label: 'Sourcing', icon: Package },
   { id: 'marketing', label: 'Marketing', icon: TrendingUp },
-  { id: 'HR & operations', label: 'Operations', icon: Users },
+  { id: 'operations', label: 'HR & Operations', icon: Users },
    { id: 'pricing', label: 'Pricing', icon: DollarSign }
 ];
 
