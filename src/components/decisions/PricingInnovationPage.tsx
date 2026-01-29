@@ -138,7 +138,7 @@ const pricingCategoriesData = pricingCategories.map(cat => {
               
               return (
                 <div key={cat.categoryId} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                  <span className="font-medium">{cat.name}</span>
+                  <span className="font-medium">{cat.name}</span>                  
                   <div className="text-right">
                     <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
                     <p className="text-lg font-bold text-blue-600">Final Buying Price:{adjustedDemand}</p>

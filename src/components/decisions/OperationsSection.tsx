@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { Users, Award, DollarSign, Save } from "lucide-react";
+import { Users, Award, DollarSign, } from "lucide-react";
 import { getHRData, saveHRConfig } from "../../api/hrApi";
 import EmployeeCard from "../EmployeeCard";
 import Slider from "../Slider";
@@ -71,10 +71,8 @@ export default function OperationsSection() {
       });
 
       console.log(res.data.summary);
-      alert("HR configuration saved successfully!");
     } catch (error) {
       console.error("Failed to save HR config", error);
-      alert("Failed to save HR configuration");
     } finally {
       setSaving(false);
     }
@@ -211,19 +209,19 @@ export default function OperationsSection() {
       {/* Save Button */}
       <button
         onClick={submitHR}
-        disabled={saving || selectedEmployees.length === 0}
+        disabled={saving}
         className={`
           w-full py-4 rounded-2xl font-bold text-base transition-all duration-300
           flex items-center justify-center gap-3 shadow-lg
           ${
-            saving || selectedEmployees.length === 0
+            saving
               ? "bg-slate-300 text-slate-600 cursor-not-allowed shadow-sm"
-              : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl active:scale-95"
+              : "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl"
           }
         `}
       >
-        <Save size={20} />
-        <span>{saving ? "Saving HR Plan..." : "Save HR Plan"}</span>
+      
+        <span>{saving ? "Saving..." : "Save "}</span>
       </button>
     </div>
   );
