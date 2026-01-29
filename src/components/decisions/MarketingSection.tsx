@@ -260,7 +260,7 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold"
+className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl"
         >
           {saving ? "Saving..." : "Save Marketing Strategy"}
         </button>

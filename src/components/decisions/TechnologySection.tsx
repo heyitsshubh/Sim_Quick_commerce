@@ -17,12 +17,14 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
   const [saving, setSaving] = useState(false);
   const [websiteBudget, setWebsiteBudget] = useState(0);
 
+  /* ===== LOAD CONFIG & STATE ===== */
   useEffect(() => {
     const load = async () => {
       const { data } = await axios.get(
         "https://sim-quick-commerce-backend.onrender.com/api/technology-config"
       );
       setConfig(data);
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -33,7 +35,7 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
           customerFacing: {
             mobileApp: true,
             voiceOrdering: false,
-            aiRecommendations: false
+            websiteDevelopment: false
           },
           operations: {
             darkStoreSystem: true,
@@ -49,6 +51,7 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
     };
     load();
   }, []);
+
   /* ===== TOGGLE ===== */
   const toggle = (section: string, key: string) => {
     setSelections((prev: any) => ({
@@ -73,10 +76,10 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
         }
       );
       setResult(data);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        ...selections,
-        websiteBudget
-      }));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ ...selections, websiteBudget })
+      );
     };
 
     calculate();
@@ -99,42 +102,41 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
     setSaving(false);
   };
 
-  if (loading || !selections) return <div>Loading Technology Setup...</div>;
+  if (loading || !selections) {
+    return <div>Loading Technology Setup...</div>;
+  }
 
-  const totalCostWithWebsite = (result?.totalCost || 0) + (Number(websiteBudget) || 0);
-  const extraKpi = { label: "Website Budget", value: `+${websiteBudget} L` };
+  /* 🔥 FIXED TOTAL COST */
+  const totalCostWithWebsite =
+    (result?.totalTechnologyCost || 0) + (Number(websiteBudget) || 0);
+
+  const extraKpi = { label: "Website Budget", value: `+₹${websiteBudget} L` };
 
   /* ===== UI ===== */
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* LEFT SIDE – OPTIONS */}
+      {/* LEFT SIDE */}
       <div className="lg:col-span-2 space-y-8">
         <h2 className="text-2xl font-bold">Technology & Platform</h2>
-
-        {/* WEBSITE BUDGET SLIDER */}
 
         {/* CUSTOMER FACING */}
         <Section title="Customer Facing Systems" subtitle="User experience & growth drivers">
           {Object.entries(config.customerFacing).map(([key, value]: any) => {
-            // Skip website - it's a slider now
-            if (key === "website") return null;
             return (
               <TechOption
                 key={key}
                 label={formatLabel(key)}
                 checked={!!selections.customerFacing[key]}
                 required={key === "mobileApp"}
-                cost={value.devCost || value.setupCost}
-                impact={
-                  key === "aiRecommendations"
-                    ? ["+15% basket size", "+10% conversion"]
-                    : ["Improved customer experience"]
-                }
+                cost={value.cost}
+                impact={["Improved customer experience"]}
                 onToggle={() => toggle("customerFacing", key)}
               />
             );
           })}
-        </Section> 
+        </Section>
+
+        {/* OPERATIONS */}
         <Section title="Operations & Intelligence" subtitle="Efficiency, margins & scalability">
           {Object.entries(config.operations).map(([key, value]: any) => (
             <TechOption
@@ -142,13 +144,15 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
               label={formatLabel(key)}
               checked={!!selections.operations[key]}
               required={key === "darkStoreSystem" || key === "riderApp"}
-              cost={value.cost || value.devCost}
+              cost={value.cost}
               impact={getOperationImpact(key, value)}
               onToggle={() => toggle("operations", key)}
             />
           ))}
         </Section>
-          <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
+
+        {/* WEBSITE SLIDER */}
+        <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
           <label className="text-lg font-semibold text-blue-900 mb-2 block">
             Website Development Budget: ₹{websiteBudget} Lakhs
           </label>
@@ -164,10 +168,8 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
             <span>₹0 L</span>
             <span>₹100 L</span>
           </div>
-          <p className="text-sm text-blue-800 mt-3">
-            💡 Allocate budget for website development. Higher investment = better conversion & features.
-          </p>
         </div>
+
         <button
           onClick={handleSave}
           disabled={saving}
@@ -180,20 +182,18 @@ export default function TechnologySection({ round, onComplete }: TechnologySecti
       {/* RIGHT SIDE – IMPACT */}
       <div className="space-y-6 sticky top-6 h-fit">
         {result && (
-          <>
-            <ImpactCard
-              title="Total Technology Cost"
-              icon="💻"
-              cost={totalCostWithWebsite}
-              kpis={[
-                { label: "Conversion", value: `+${result.customerFacing?.kpis?.conversion || 0}%` },
-                { label: "Basket Size", value: `+${result.customerFacing?.kpis?.basketSize || 0}%` },
-                { label: "Waste Reduction", value: `${Math.abs(result.operations?.kpis?.wasteReduction || 0)}%` },
-                { label: "Decision Quality", value: `+${result.operations?.kpis?.decisionQuality || 0}%` },
-                extraKpi,
-              ]}
-            />
-          </>
+          <ImpactCard
+            title="Total Technology Cost"
+            icon="💻"
+            cost={totalCostWithWebsite}
+            kpis={[
+              { label: "Conversion", value: `+${result.kpis?.customerFacing?.conversion || 0}%` },
+              { label: "Basket Size", value: `+${result.kpis?.customerFacing?.basketSize || 0}%` },
+              { label: "Waste Reduction", value: `${result.kpis?.operations?.wasteReduction || 0}%` },
+              { label: "Decision Quality", value: `+${result.kpis?.operations?.decisionQuality || 0}%` },
+              extraKpi
+            ]}
+          />
         )}
       </div>
     </div>
@@ -216,28 +216,14 @@ function TechOption({ label, checked, required, cost, impact, onToggle }: any) {
   return (
     <label
       className={`flex items-start justify-between gap-4 p-4 rounded-xl border cursor-pointer transition ${
-        checked
-          ? "bg-green-50 border-green-400"
-          : "border-slate-200 hover:border-slate-300"
+        checked ? "bg-green-50 border-green-400" : "border-slate-200"
       } ${required && "opacity-80 cursor-not-allowed bg-blue-50 border-blue-300"}`}
     >
       <div className="flex gap-3">
-        <input
-          type="checkbox"
-          checked={checked}
-          disabled={required}
-          onChange={onToggle}
-          className="mt-1"
-        />
+        <input type="checkbox" checked={checked} disabled={required} onChange={onToggle} />
         <div>
-          <div className="font-semibold">
-            {label} {required && <span className="text-xs text-blue-600">(Required)</span>}
-          </div>
-          {cost && (
-            <div className="text-xs text-slate-600">
-              Cost: ₹{cost.min} L
-            </div>
-          )}
+          <div className="font-semibold">{label}</div>
+          {cost && <div className="text-xs text-slate-600">Cost: ₹{cost} L</div>}
           {impact && (
             <ul className="mt-1 text-xs text-green-700 list-disc ml-4">
               {impact.map((i: string) => (
@@ -253,21 +239,16 @@ function TechOption({ label, checked, required, cost, impact, onToggle }: any) {
 
 function ImpactCard({ title, icon, cost, kpis }: any) {
   return (
-    <div className="rounded-2xl border bg-gradient-to-br from-white to-slate-50 p-6 shadow-md">
+    <div className="rounded-2xl border bg-white p-6 shadow-md">
       <div className="flex items-center gap-4 mb-4">
-        <div className="h-12 w-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl">
+        <div className="h-12 w-12 rounded-2xl bg-blue-100 flex items-center justify-center text-2xl">
           {icon}
         </div>
-        <div>
-          <h4 className="font-semibold">{title}</h4>
-          <p className="text-xs text-slate-500">Monthly impact</p>
-        </div>
+        <h4 className="font-semibold">{title}</h4>
       </div>
 
-      <div className="text-3xl font-bold mb-4">
-        ₹{cost.toFixed(2)} L
-      </div>
-      
+      <div className="text-3xl font-bold mb-4">₹{cost.toFixed(2)} L</div>
+
       <div className="grid grid-cols-2 gap-2">
         {kpis.map((k: any) => (
           <div
@@ -282,17 +263,17 @@ function ImpactCard({ title, icon, cost, kpis }: any) {
     </div>
   );
 }
+
 /* ================= HELPERS ================= */
 
 function formatLabel(key: string) {
-  return key
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (s) => s.toUpperCase());
+  return key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
 }
+
 function getOperationImpact(key: string, value: any) {
   switch (key) {
     case "demandForecastingAI":
-      return [`${Math.abs(value.wasteReductionPercent || 0)}% waste reduction`, "+10% planning accuracy"];
+      return [`${value.wasteReductionPercent || 0}% waste reduction`, "+10% planning accuracy"];
     case "dynamicPricing":
       return ["+8% margin", "+5% revenue uplift"];
     case "supplyChainAnalytics":
@@ -300,4 +281,4 @@ function getOperationImpact(key: string, value: any) {
     default:
       return ["Operational efficiency boost"];
   }
-}              
+}
