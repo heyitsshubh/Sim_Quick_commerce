@@ -11,7 +11,7 @@ interface ImpactPieProps {
   data: { name: string; value: number }[];
 }
 
-const COLORS = ["#2563eb", "#60a5fa", "#93c5fd"];
+const COLORS = ["#2563eb", "#60a5fa", "#93c5fd", "#dbeafe"];
 
 export default function ImpactPie({ title, data }: ImpactPieProps) {
   return (
@@ -22,9 +22,13 @@ export default function ImpactPie({ title, data }: ImpactPieProps) {
 
       <ResponsiveContainer width="100%" height="80%">
         <PieChart>
-          <Tooltip 
+          <Tooltip
             formatter={(value) => `${value}`}
-            contentStyle={{ backgroundColor: "#fff", border: "1px solid #ccc", borderRadius: "4px" }}
+            contentStyle={{
+              backgroundColor: "#fff",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
           />
           <Pie
             data={data}
@@ -37,13 +41,9 @@ export default function ImpactPie({ title, data }: ImpactPieProps) {
             label
           >
             {data.map((_, index) => (
-              <Cell
-                key={index}
-                fill={COLORS[index % COLORS.length]}
-              />
+              <Cell key={index} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-        
         </PieChart>
       </ResponsiveContainer>
     </div>

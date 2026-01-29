@@ -208,8 +208,52 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
               </div>
             </div>
 
-            <Range label="Riders per City" value={riderCount} min={50} max={1000} set={setRiderCount} />
-            <Range label="Bikes per City" value={bikeCount} min={50} max={1000} set={setBikeCount} />
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium block mb-2">Riders per City</label>
+                <input
+                  type="range"
+                  min={-currentRiders}
+                  max={1000}
+                  step={50}
+                  value={riderCount}
+                  onChange={(e) => setRiderCount(+e.target.value)}
+                  className="w-full"
+                />
+                <div className="text-sm text-slate-600 font-semibold mt-1">{riderCount}</div>
+                <input
+                  type="number"
+                  value={riderCount}
+                  onChange={(e) => setRiderCount(+e.target.value)}
+                  min={-currentRiders}
+                  max={1000}
+                  className="w-full border px-3 py-2 rounded-lg mt-2"
+                  placeholder="Enter custom value"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium block mb-2">Bikes per City</label>
+                <input
+                  type="range"
+                  min={-currentBikes}
+                  max={1000}
+                  step={50}
+                  value={bikeCount}
+                  onChange={(e) => setBikeCount(+e.target.value)}
+                  className="w-full"
+                />
+                <div className="text-sm text-slate-600 font-semibold mt-1">{bikeCount}</div>
+                <input
+                  type="number"
+                  value={bikeCount}
+                  onChange={(e) => setBikeCount(+e.target.value)}
+                  min={-currentBikes}
+                  max={1000}
+                  className="w-full border px-3 py-2 rounded-lg mt-2"
+                  placeholder="Enter custom value"
+                />
+              </div>
+            </div>
 
             <div>
               <label className="text-sm font-medium">Electric Bikes (% of fleet)</label>
@@ -307,24 +351,6 @@ function Checkbox({ label, checked, set }: any) {
       <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} className="w-5 h-5" />
       <span className="font-medium">{label}</span>
     </label>
-  );
-}
-
-function Range({ label, value, min, max, set }: any) {
-  return (
-    <div>
-      <label className="text-sm font-medium block mb-2">{label}</label>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={50}
-        value={value}
-        onChange={(e) => set(+e.target.value)}
-        className="w-full"
-      />
-      <div className="text-sm text-slate-600 font-semibold mt-1">{value}</div>
-    </div>
   );
 }
 

@@ -2,48 +2,37 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Lock } from 'lucide-react';
-import { usePersistentState } from '../../hooks/usePersistentState';
 import ImpactPie from '../charts/ImpactPies';
 
 interface ProductCategoriesSectionProps {
   round: number;
   onComplete: (data: any) => void;
-  onCategorySelectionChange?: (selectedCategoryNames: string[]) => void; // NEW
+  onCategorySelectionChange?: (selectedCategoryNames: string[]) => void;
   showMinimal?: boolean;
 }
 
-type InventoryRange = {
-  label: string;
-  min: number;
-  max: number;
+type PricingTiers = {
+  premium: number;
+  standard: number;
+  basic: number;
+  discount: number;
 };
 
 type Category = {
   _id: string;
   name: string;
-  inventoryRanges: InventoryRange[];
+  pricingTiers: PricingTiers;
   baseMonthlyDemand: number;
 };
-
-type SelectionState = Record<
-  string,
-  {
-    enabled: boolean;
-    inventoryRange: string;
-  }
->;
 
 export default function ProductCategoriesSection({
   round,
   onComplete,
-  onCategorySelectionChange, // NEW
-   showMinimal = false,
+  onCategorySelectionChange,
+  showMinimal = false,
 }: ProductCategoriesSectionProps) {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [marketPie, setMarketPie] = useState<any[]>([]);
-  const [quickPie, setQuickPie] = useState<any[]>([]);
-  const [selections, setSelections] =
-    usePersistentState<SelectionState>('step2_selections', {});
+  const [selections, setSelections] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,15 +40,21 @@ export default function ProductCategoriesSection({
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [catRes, marketRes, quickRes] = await Promise.all([
-          axios.get('https://sim-quick-commerce-backend.onrender.com/api/step-two/categories'),
-          axios.get('https://sim-quick-commerce-backend.onrender.com/api/market-positioning'),
-          axios.get('https://sim-quick-commerce-backend.onrender.com/api/quick-commerce-models'),
-        ]);
+        const catRes = await axios.get(
+          'https://sim-quick-commerce-backend.onrender.com/api/step-two/categories'
+        );
 
-        setCategories(catRes.data || []);
-        setMarketPie(marketRes.data || []);
-        setQuickPie(quickRes.data || []);
+        const fetchedCategories = catRes.data || [];
+        setCategories(fetchedCategories);
+
+        const initialSelections = (fetchedCategories as Category[]).reduce(
+          (acc, cat) => ({
+            ...acc,
+            [cat._id]: true,
+          }),
+          {} as Record<string, boolean>
+        );
+        setSelections(initialSelections);
       } catch {
         setError('Failed to load data');
       } finally {
@@ -70,50 +65,29 @@ export default function ProductCategoriesSection({
     fetchAll();
   }, []);
 
-  // NEW: Notify parent whenever selections change
   useEffect(() => {
-    if (!onCategorySelectionChange || categories.length === 0) return;
-    
-    const selectedNames = Object.entries(selections)
-      .filter(([, v]) => v.enabled)
-      .map(([id]) => {
-        const cat = categories.find(c => c._id === id);
-        return cat?.name.toLowerCase() || '';
-      })
-      .filter(Boolean);
-    
-    onCategorySelectionChange(selectedNames);
-  }, [selections, categories, onCategorySelectionChange]);
+    if (!categories.length) return;
 
-  const toggleCategory = (category: Category) => {
-    setSelections({
-      ...selections,
-      [category._id]: selections[category._id]
-        ? { ...selections[category._id], enabled: !selections[category._id].enabled }
-        : {
-            enabled: true,
-            inventoryRange: category.inventoryRanges[0]?.label,
-          },
-    });
-  };
+    const selectedNames = categories
+      .filter((cat) => selections[cat._id])
+      .map((cat) => cat.name.toLowerCase());
 
-  const updateInventory = (id: string, value: string) => {
-    setSelections({
-      ...selections,
-      [id]: {
-        ...(selections[id] ?? { enabled: true }),
-        inventoryRange: value,
-      },
-    });
+    onCategorySelectionChange?.(selectedNames);
+  }, [categories, selections, onCategorySelectionChange]);
+
+  const toggleCategory = (categoryId: string) => {
+    setSelections((prev) => ({
+      ...prev,
+      [categoryId]: !prev[categoryId],
+    }));
   };
 
   const handleSubmit = async () => {
     const selectedCategories = Object.entries(selections)
-      .filter(([, v]) => v.enabled)
-      .map(([id, v]) => ({
+      .filter(([, enabled]) => enabled)
+      .map(([id]) => ({
         categoryId: id,
         enabled: true,
-        inventoryRange: v.inventoryRange,
       }));
 
     if (selectedCategories.length === 0) {
@@ -153,14 +127,14 @@ export default function ProductCategoriesSection({
     );
   }
 
-
-
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-2">Product Categories</h2>
-      <p className="text-slate-600 mb-6">
-        Select categories and inventory ranges
-      </p>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold">Product Categories</h2>
+        <p className="text-slate-600">
+          Choose categories to include and review pricing tiers.
+        </p>
+      </div>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg">
@@ -168,63 +142,73 @@ export default function ProductCategoriesSection({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 mb-6">
-        {categories.map((category) => {
-          const selection = selections[category._id];
-          const enabled = !!selection?.enabled;
-
-          return (
-            <div
-              key={category._id}
-              className={`p-4 border-2 rounded-xl ${
-                enabled ? 'border-blue-600 bg-blue-50' : 'border-slate-200'
-              }`}
-            >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {categories.map((category) => (
+          <div
+            key={category._id}
+            className={`bg-white border rounded-2xl p-5 shadow-sm transition-all ${
+              selections[category._id]
+                ? 'border-blue-600 ring-1 ring-blue-200'
+                : 'border-slate-200'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={enabled}
-                  onChange={() => toggleCategory(category)}
+                  checked={!!selections[category._id]}
+                  onChange={() => toggleCategory(category._id)}
+                  className="w-4 h-4"
                 />
-                <span className="font-semibold">{category.name}</span>
+                <span className="font-semibold text-slate-800 text-lg">
+                  {category.name}
+                </span>
               </label>
-
-              {/* Charts always visible */}
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <ImpactPie
-                  title="Quick Commerce Demand"
-                  data={quickPie}
-                />
-                <ImpactPie
-                  title="Market Positioning Demand"
-                  data={marketPie}
-                />
-              </div>
-
-              {/* Inventory Dropdown only when enabled */}
-              {enabled && (
-                <div className="mt-4">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Inventory Level
-                  </label>
-                  <select
-                    value={selection.inventoryRange}
-                    onChange={(e) =>
-                      updateInventory(category._id, e.target.value)
-                    }
-                    className="w-full border rounded-lg px-3 py-2"
-                  >
-                    {category.inventoryRanges.map((r) => (
-                      <option key={r.label} value={r.label}>
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-full">
+                Demand: {category.baseMonthlyDemand}
+              </span>
             </div>
-          );
-        })}
+
+            <div className="mt-4">
+              <ImpactPie
+                title={`${category.name} Pricing Tiers`}
+                data={[
+                  { name: 'Premium', value: category.pricingTiers.premium },
+                  { name: 'Standard', value: category.pricingTiers.standard },
+                  { name: 'Basic', value: category.pricingTiers.basic },
+                  { name: 'Discount', value: category.pricingTiers.discount },
+                ]}
+              />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-600">
+              <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+                <span>Premium</span>
+                <span className="font-semibold text-slate-900">
+                  {category.pricingTiers.premium}
+                </span>
+              </div>
+              <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+                <span>Standard</span>
+                <span className="font-semibold text-slate-900">
+                  {category.pricingTiers.standard}
+                </span>
+              </div>
+              <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+                <span>Basic</span>
+                <span className="font-semibold text-slate-900">
+                  {category.pricingTiers.basic}
+                </span>
+              </div>
+              <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+                <span>Discount</span>
+                <span className="font-semibold text-slate-900">
+                  {category.pricingTiers.discount}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {round < 8 && (
@@ -237,7 +221,7 @@ export default function ProductCategoriesSection({
       <button
         onClick={handleSubmit}
         disabled={saving}
-        className="w-full bg-blue-600 text-white py-3 rounded-xl"
+        className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50"
       >
         {saving ? 'Saving...' : 'Save Product Selection'}
       </button>
