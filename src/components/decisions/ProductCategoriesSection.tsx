@@ -36,6 +36,7 @@ export default function ProductCategoriesSection({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const selectionStorageKey = 'step2_selections';
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -47,10 +48,15 @@ export default function ProductCategoriesSection({
         const fetchedCategories = catRes.data || [];
         setCategories(fetchedCategories);
 
+        const savedSelectionsRaw = localStorage.getItem(selectionStorageKey);
+        const savedSelections = savedSelectionsRaw
+          ? (JSON.parse(savedSelectionsRaw) as Record<string, boolean>)
+          : null;
+
         const initialSelections = (fetchedCategories as Category[]).reduce(
           (acc, cat) => ({
             ...acc,
-            [cat._id]: true,
+            [cat._id]: savedSelections?.[cat._id] ?? true,
           }),
           {} as Record<string, boolean>
         );
@@ -68,12 +74,14 @@ export default function ProductCategoriesSection({
   useEffect(() => {
     if (!categories.length) return;
 
+    localStorage.setItem(selectionStorageKey, JSON.stringify(selections));
+
     const selectedNames = categories
       .filter((cat) => selections[cat._id])
       .map((cat) => cat.name.toLowerCase());
 
     onCategorySelectionChange?.(selectedNames);
-  }, [categories, selections, onCategorySelectionChange]);
+  }, [categories, selections, onCategorySelectionChange, selectionStorageKey]);
 
   const toggleCategory = (categoryId: string) => {
     setSelections((prev) => ({

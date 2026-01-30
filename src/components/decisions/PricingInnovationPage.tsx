@@ -120,7 +120,7 @@ const pricingCategoriesData = pricingCategories.map(cat => {
       />
 
       {/* PART 2: GLOBAL QUALITY SELECTOR (Only Once) */}
-      {pricingCategories.length > 0 && (
+      {categories.length > 0 && (
         <div className="bg-white border rounded-2xl p-5">
           <h3 className="font-bold text-lg mb-4">Select Quality Level (Applied to All Categories)</h3>
           <QualitySelector
@@ -132,16 +132,33 @@ const pricingCategoriesData = pricingCategories.map(cat => {
           {/* Show adjusted demand for each category */}
           <div className="mt-6 space-y-3">
             <h4 className="font-semibold text-slate-700">Adjusted Demand by Category:</h4>
-            {pricingCategories.map(cat => {
+            {categories.map(cat => {
+              const isSelected = selectedCategories.includes(cat.name.toLowerCase());
               const multiplier = config?.qualityMultipliers?.[globalQualityLevel.toString()] || 1;
               const adjustedDemand = Math.round(cat.baseMonthlyDemand * multiplier);
-              
+
               return (
-                <div key={cat.categoryId} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                  <span className="font-medium">{cat.name}</span>                  
+                <div
+                  key={cat.categoryId}
+                  className={`flex justify-between items-center p-3 rounded-lg ${
+                    isSelected ? 'bg-slate-50' : 'bg-slate-50/60 opacity-70'
+                  }`}
+                >
+                  <div>
+                    <span className="font-medium">{cat.name}</span>
+                    {!isSelected && (
+                      <span className="ml-2 text-xs text-slate-500">Not selected</span>
+                    )}
+                  </div>
                   <div className="text-right">
                     <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
-                    <p className="text-lg font-bold text-blue-600">Final Buying Price:{adjustedDemand}</p>
+                    {isSelected ? (
+                      <p className="text-lg font-bold text-blue-600">
+                        Final Buying Price:{adjustedDemand}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-slate-500">Final Buying Price: —</p>
+                    )}
                   </div>
                 </div>
               );
@@ -151,7 +168,7 @@ const pricingCategoriesData = pricingCategories.map(cat => {
       )}
 
       {/* PART 3: MARGIN MULTIPLIER INPUT & CALCULATED PRICES */}
-      {pricingCategories.length > 0 && (
+      {categories.length > 0 && (
         <div className="bg-white border rounded-2xl p-6">
           <h3 className="font-bold text-lg mb-4">Set Margin Multiplier</h3>
           
@@ -173,24 +190,36 @@ const pricingCategoriesData = pricingCategories.map(cat => {
 
           <div className="space-y-4">
             <h4 className="font-semibold text-slate-700">Calculated Prices:</h4>
-            {pricingCategories.map(cat => {
-              const calculatedPrice = Math.round(cat.baseMonthlyDemand * marginMultiplier);
+            {categories.map(cat => {
+              const isSelected = selectedCategories.includes(cat.name.toLowerCase());
+              const multiplier = config?.qualityMultipliers?.[globalQualityLevel.toString()] || 1;
+              const adjustedDemand = Math.round(cat.baseMonthlyDemand * multiplier);
+              const calculatedPrice = Math.round(adjustedDemand * marginMultiplier);
               
               return (
-                <div key={cat.categoryId} className="border rounded-xl p-4 bg-slate-50">
+                <div
+                  key={cat.categoryId}
+                  className={`border rounded-xl p-4 ${
+                    isSelected ? 'bg-slate-50' : 'bg-slate-50/60 opacity-70'
+                  }`}
+                >
                   <div className="flex justify-between items-center">
                     <div>
                       <h5 className="font-medium text-lg">{cat.name}</h5>
+                      {!isSelected && (
+                        <p className="text-xs text-slate-500">Not selected</p>
+                      )}
                     </div>
-                    {/* <div className="text-right">
-                      <p className="text-sm text-slate-600">Final Selling Price</p>
-                      <p className="text-2xl font-bold text-green-600">₹{calculatedPrice}</p>
-                      
-                    </div> */}
-                     <div className="text-right">
-                    <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
-                    <p className="text-lg font-bold text-blue-600">Final Selling Price:₹{calculatedPrice}</p>
-                  </div>
+                    <div className="text-right">
+                      <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
+                      {isSelected ? (
+                        <p className="text-lg font-bold text-blue-600">
+                          Final Selling Price:₹{calculatedPrice}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-slate-500">Final Selling Price: —</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
