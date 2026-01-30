@@ -149,9 +149,9 @@ const pricingCategoriesData = pricingCategories.map(cat => {
                     {!isSelected && (
                       <span className="ml-2 text-xs text-slate-500">Not selected</span>
                     )}
+                    <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
                     {isSelected ? (
                       <p className="text-lg font-bold text-blue-600">
                         Final Buying Price:{adjustedDemand}
@@ -209,9 +209,9 @@ const pricingCategoriesData = pricingCategories.map(cat => {
                       {!isSelected && (
                         <p className="text-xs text-slate-500">Not selected</p>
                       )}
+                      <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
                       {isSelected ? (
                         <p className="text-lg font-bold text-blue-600">
                           Final Selling Price:₹{calculatedPrice}

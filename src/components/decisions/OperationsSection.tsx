@@ -94,22 +94,19 @@ export default function OperationsSection() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-3xl p-8 text-white shadow-xl overflow-hidden relative">
+
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16" />
         
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-3">
-            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
-              <Users size={32} className="text-white" />
-            </div>
             <div>
               <h2 className="text-4xl font-bold tracking-tight">HR & Operations</h2>
-              <p className="text-blue-100 text-sm mt-1">Build and develop your team</p>
+              <p className="text-black-100 text-sm mt-1">Build and develop your team</p>
             </div>
           </div>
         </div>
-      </div>
+     
 
       {/* Top Management Section */}
       <div className="space-y-5">
