@@ -18,11 +18,18 @@ type PricingTiers = {
   discount: number;
 };
 
+type InventoryRange = {
+  label: string;
+  min: number;
+  max: number;
+};
+
 type Category = {
   _id: string;
   name: string;
   pricingTiers: PricingTiers;
   baseMonthlyDemand: number;
+  inventoryRanges?: InventoryRange[];
 };
 
 export default function ProductCategoriesSection({
@@ -177,6 +184,48 @@ export default function ProductCategoriesSection({
               </span>
             </div>
 
+            <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-200">
+                <div className="text-blue-700 font-semibold">Premium</div>
+                <div className="text-blue-900 font-bold text-sm">{category.pricingTiers.premium}</div>
+              </div>
+              <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg p-3 border border-cyan-200">
+                <div className="text-cyan-700 font-semibold">Standard</div>
+                <div className="text-cyan-900 font-bold text-sm">{category.pricingTiers.standard}</div>
+              </div>
+              <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-lg p-3 border border-sky-200">
+                <div className="text-sky-700 font-semibold">Basic</div>
+                <div className="text-sky-900 font-bold text-sm">{category.pricingTiers.basic}</div>
+              </div>
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-3 border border-slate-200">
+                <div className="text-slate-700 font-semibold">Discount</div>
+                <div className="text-slate-900 font-bold text-sm">{category.pricingTiers.discount}</div>
+              </div>
+            </div>
+
+            {category.inventoryRanges && category.inventoryRanges.length > 0 && (
+              <div className="mt-4">
+                <h5 className="text-sm font-semibold text-slate-700 mb-3">Inventory Ranges:</h5>
+                <div className="space-y-2">
+                  {category.inventoryRanges.map((range, idx) => (
+                    <label
+                      key={idx}
+                      className="flex items-center gap-3 p-2 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition-colors"
+                    >
+                      <input
+                        type="radio"
+                        name={`inventory-${category._id}`}
+                        value={range.label}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-medium text-slate-700">{range.label}</span>
+                      <span className="text-xs text-slate-500">({range.min} - {range.max})</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-4">
               <ImpactPie
                 title={`${category.name} Pricing Tiers`}
@@ -187,33 +236,6 @@ export default function ProductCategoriesSection({
                   { name: 'Discount', value: category.pricingTiers.discount },
                 ]}
               />
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-600">
-              <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
-                <span>Premium</span>
-                <span className="font-semibold text-slate-900">
-                  {category.pricingTiers.premium}
-                </span>
-              </div>
-              <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
-                <span>Standard</span>
-                <span className="font-semibold text-slate-900">
-                  {category.pricingTiers.standard}
-                </span>
-              </div>
-              <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
-                <span>Basic</span>
-                <span className="font-semibold text-slate-900">
-                  {category.pricingTiers.basic}
-                </span>
-              </div>
-              <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
-                <span>Discount</span>
-                <span className="font-semibold text-slate-900">
-                  {category.pricingTiers.discount}
-                </span>
-              </div>
             </div>
           </div>
         ))}

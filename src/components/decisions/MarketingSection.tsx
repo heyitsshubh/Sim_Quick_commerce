@@ -22,73 +22,121 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
     const sumSection = (sectionName: 'acquisition'|'retention'|'partnerships') =>
       Object.entries(s[sectionName] || {}).reduce((acc: number, [key, item]: any) => {
         if (!item?.enabled) return acc;
-        // Prefer state values when present
-        if (typeof item?.budget === 'number') return acc + item.budget;
-        if (typeof item?.cost === 'number') return acc + item.cost;
-        // Fall back to config-defined costs if state doesn't carry numeric fields
+        // For sliders (like googleAds, facebookAds), use the budget from state
+        if (typeof item?.budget === 'number') {
+          console.log(`Adding ${sectionName}.${key} budget:`, item.budget);
+          return acc + item.budget;
+        }
+        // For checkboxes, use the cost from config
         const conf = cfg?.[sectionName]?.[key] || {};
-        if (typeof conf.minCost === 'number') return acc + conf.minCost;
-        if (typeof conf.yearlyCost === 'number') return acc + conf.yearlyCost;
-        if (typeof conf.minBudget === 'number') return acc + conf.minBudget;
+        if (typeof conf.cost === 'number') {
+          console.log(`Adding ${sectionName}.${key} cost:`, conf.cost);
+          return acc + conf.cost;
+        }
         return acc;
       }, 0);
-    return sumSection('acquisition') + sumSection('retention') + sumSection('partnerships');
+    const total = sumSection('acquisition') + sumSection('retention') + sumSection('partnerships');
+    console.log("Total cost computed:", total);
+    return total;
   };
 
   /* ================= LOAD CONFIG + SAFE STATE ================= */
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await axios.get(
-        "https://sim-quick-commerce-backend.onrender.com/api/marketing-config"
-      );
+      try {
+        const { data } = await axios.get(
+          "https://sim-quick-commerce-backend.onrender.com/api/marketing-config"
+        );
 
-      setConfig(data);
+        console.log("Raw API response:", data);
 
-      // Build defaults dynamically from API config
-      const buildSectionDefaults = (sectionConfig: any) => {
-        const defaults: any = {};
-        Object.entries(sectionConfig || {}).forEach(([key, val]: any) => {
-          if (val.minBudget !== undefined) {
-            defaults[key] = { enabled: false, budget: val.minBudget };
-          } else if (val.minPercent !== undefined) {
-            // Keep discount enabled by default if percent-based
-            defaults[key] = { enabled: true, percent: val.minPercent };
-          } else if (val.minCost !== undefined) {
-            defaults[key] = { enabled: false, cost: val.minCost };
-          } else {
-            // Simple toggle-only option (e.g., setupCost or revenueBoost)
-            defaults[key] = { enabled: false };
-          }
-        });
-        return defaults;
-      };
+        // Reorganize flat API response into nested structure
+        const organizedConfig = {
+          acquisition: {
+            googleAds: data.marketing?.googleAds,
+            facebookAds: data.marketing?.facebookAds,
+            referralProgram: data.marketing?.referralProgram,
+            firstOrderDiscount: data.marketing?.firstOrderDiscount,
+            influencerMarketing: data.marketing?.influencerMarketing,
+          },
+          retention: {
+            pushNotifications: data.marketing?.pushNotifications,
+            loyaltyProgram: data.marketing?.loyaltyProgram,
+            emailAndSMS: data.marketing?.emailAndSMS,
+            cashbackOption: data.marketing?.cashbackOption,
+          },
+          partnerships: {
+            creditCardOffers: data.marketing?.creditCardOffers,
+            corporateTieUps: data.marketing?.corporateTieUps,
+            housingSociety: data.marketing?.housingSociety,
+          },
+        };
 
-      const baseState = {
-        acquisition: buildSectionDefaults(data.acquisition),
-        retention: buildSectionDefaults(data.retention),
-        partnerships: buildSectionDefaults(data.partnerships),
-      };
+        console.log("Organized config:", organizedConfig);
 
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          setState({
-            ...baseState,
-            ...parsed,
-            acquisition: { ...baseState.acquisition, ...(parsed.acquisition || {}) },
-            retention: { ...baseState.retention, ...(parsed.retention || {}) },
-            partnerships: { ...baseState.partnerships, ...(parsed.partnerships || {}) },
+        setConfig(organizedConfig);
+
+        // Build defaults dynamically from API config
+        const buildSectionDefaults = (sectionConfig: any) => {
+          const defaults: any = {};
+          Object.entries(sectionConfig || {}).forEach(([key, val]: any) => {
+            if (!val) return; // Skip if value is undefined
+            if (val.minBudget !== undefined) {
+              defaults[key] = { enabled: false, budget: val.minBudget };
+            } else if (val.minPercent !== undefined) {
+              defaults[key] = { enabled: false, percent: val.minPercent };
+            } else if (val.minCost !== undefined) {
+              defaults[key] = { enabled: false, cost: val.minCost };
+            } else {
+              // Simple toggle-only option (e.g., setupCost or revenueBoost)
+              defaults[key] = { enabled: false };
+            }
           });
-        } catch {
+          return defaults;
+        };
+
+        const baseState = {
+          acquisition: buildSectionDefaults(organizedConfig.acquisition),
+          retention: buildSectionDefaults(organizedConfig.retention),
+          partnerships: buildSectionDefaults(organizedConfig.partnerships),
+        };
+
+        console.log("Base state:", baseState);
+
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            // Only merge items that exist in the current config
+            const mergeSection = (sectionName: 'acquisition'|'retention'|'partnerships') => {
+              const base = baseState[sectionName];
+              const saved = parsed[sectionName] || {};
+              const merged: any = {};
+              // Only keep items that exist in the current config
+              Object.keys(base).forEach(key => {
+                merged[key] = saved[key] ? { ...base[key], ...saved[key] } : base[key];
+              });
+              return merged;
+            };
+            
+            setState({
+              acquisition: mergeSection('acquisition'),
+              retention: mergeSection('retention'),
+              partnerships: mergeSection('partnerships'),
+            });
+          } catch {
+            setState(baseState);
+          }
+        } else {
           setState(baseState);
         }
-      } else {
-        setState(baseState);
-      }
 
-      setLoading(false);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading marketing config:", error);
+        setLoading(false);
+      }
     };
 
     load();
@@ -145,7 +193,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         <Section title="Customer Acquisition">
           {Object.entries(config.acquisition).map(([key, val]: any) => {
             const dataObj = state.acquisition[key];
-            const sliderKeys = new Set(["googleAds", "facebookAds"]);
             const labelMap: any = {
               googleAds: "Google Ads",
               // Map backend `facebookAds` to Instagram for UI
@@ -162,15 +209,21 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
               firstOrderDiscount: "Critical conversion driver",
             };
 
-            if (sliderKeys.has(key) && val.minBudget !== undefined) {
+            // Check if item uses slider (either has minBudget or appliesTo is "Slider")
+            const isSlider = (key === "googleAds" || key === "facebookAds") || val.minBudget !== undefined;
+            
+            if (isSlider) {
+              const minBudget = val.minBudget ?? 10000;
+              const maxBudget = val.maxBudget ?? 500000;
               return (
                 <BudgetOption
                   key={key}
                   label={labelMap[key] || key}
                   desc={descMap[key] || ""}
                   data={dataObj}
-                  min={val.minBudget}
-                  max={val.maxBudget}
+                  min={minBudget}
+                  max={maxBudget}
+                  cost={val.cost}
                   onToggle={() => toggle(state, setState, "acquisition", key)}
                   onChange={(v:number)=>update(state,setState,"acquisition",key,"budget",v)}
                 />
@@ -182,6 +235,7 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
                 key={key}
                 label={labelMap[key] || key}
                 checked={!!dataObj?.enabled}
+                cost={val.cost}
                 onToggle={() => {
                   const current = state.acquisition[key] || {};
                   setState({
@@ -198,20 +252,21 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         </Section>
 
         <Section title="Retention">
-          {Object.entries(config.retention).map(([key]: any) => {
+          {Object.entries(config.retention).map(([key, val]: any) => {
             const dataObj = state.retention[key];
             // All retention items should be checkboxes (no sliders)
             const labelMap: any = {
               pushNotifications: "Push Notifications",
               loyaltyProgram: "Loyalty Program",
-              emailSms: "Email & SMS",
-              cashbackCoupons: "Cashback Coupons",
+              emailAndSMS: "Email & SMS",
+              cashbackOption: "Cashback Option",
             };
             return (
               <Checkbox
                 key={key}
                 label={labelMap[key] || key}
                 checked={!!dataObj?.enabled}
+                cost={val.cost}
                 onToggle={() => {
                   const current = state.retention[key] || {};
                   setState({
@@ -228,12 +283,12 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         </Section>
 
         <Section title="Partnerships">
-          {Object.entries(config.partnerships || {}).map(([key]: any) => {
+          {Object.entries(config.partnerships || {}).map(([key, val]: any) => {
             const dataObj = state.partnerships[key];
             const labelMap: any = {
               creditCardOffers: "Credit Card Offers",
-              corporateTieups: "Corporate Tie-ups",
-              housingSocieties: "Housing Societies",
+              corporateTieUps: "Corporate Tie-ups",
+              housingSociety: "Housing Society",
             };
 
             // All partnership items should be checkboxes (no sliders)
@@ -242,6 +297,7 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
                 key={key}
                 label={labelMap[key] || key}
                 checked={!!dataObj?.enabled}
+                cost={val.cost}
                 onToggle={() => {
                   const current = state.partnerships[key] || {};
                   setState({
@@ -312,20 +368,29 @@ function Section({ title, children }: any) {
   );
 }
 
-function BudgetOption({ label, desc, data, min, max, onToggle, onChange }: any) {
+function BudgetOption({ label, desc, data, min, max, cost, onToggle, onChange }: any) {
   const minValue = min ?? 0;
   const maxValue = max ?? minValue;
   const value = data?.budget ?? minValue;
+  const costValue = cost ?? 0;
+
   return (
-    <div className="border rounded-xl p-4 bg-gradient-to-br from-white to-slate-50">
-      <label className="flex gap-3">
+    <div className="border rounded-xl p-4 bg-gradient-to-br from-white to-slate-50 space-y-2">
+      <label className="flex gap-3 items-center">
         <input type="checkbox" checked={!!data?.enabled} onChange={onToggle} />
         <span className="font-medium">{label}</span>
       </label>
-      <p className="text-xs md:text-sm text-slate-600">{desc}</p>
 
+      <p className="text-xs text-slate-600">{desc}</p>
+
+      {/* 🔥 COST ALWAYS VISIBLE */}
+      <div className="text-sm font-semibold text-slate-800">
+        Cost: ₹{(costValue / 100000).toFixed(2)} L
+      </div>
+
+      {/* SLIDER ONLY WHEN ENABLED */}
       {data?.enabled && (
-        <div className="mt-3 space-y-1">
+        <div className="mt-2 space-y-1">
           <input
             type="range"
             min={minValue}
@@ -335,10 +400,11 @@ function BudgetOption({ label, desc, data, min, max, onToggle, onChange }: any) 
             onChange={(e) => onChange(+e.target.value)}
             className="w-full accent-blue-600"
           />
-          <div className="text-xs text-slate-700 flex justify-between">
-            <span>Min: ₹{minValue.toLocaleString()}</span>
-            <span>Selected: ₹{value.toLocaleString()}</span>
-            <span>Max: ₹{maxValue.toLocaleString()}</span>
+
+          <div className="text-xs text-slate-600 flex justify-between">
+            <span>₹{minValue.toLocaleString()}</span>
+            <span>₹{value.toLocaleString()}</span>
+            <span>₹{maxValue.toLocaleString()}</span>
           </div>
         </div>
       )}
@@ -346,13 +412,20 @@ function BudgetOption({ label, desc, data, min, max, onToggle, onChange }: any) 
   );
 }
 
+
 // CostOption removed: only Google Ads and Instagram use sliders; others are checkboxes
 
-function Checkbox({ label, checked, onToggle }: any) {
+function Checkbox({ label, checked, cost, onToggle }: any) {
+  const costValue = cost ?? 0;
   return (
-    <label className="flex gap-3 p-4 border rounded-xl cursor-pointer bg-gradient-to-br from-white to-slate-50">
-      <input type="checkbox" checked={checked} onChange={onToggle} />
-      <span className="font-medium">{label}</span>
+    <label className="flex gap-3 p-4 border rounded-xl cursor-pointer bg-gradient-to-br from-white to-slate-50 flex-col">
+      <div className="flex gap-3">
+        <input type="checkbox" checked={checked} onChange={onToggle} />
+        <span className="font-medium">{label}</span>
+      </div>
+      <div className="text-sm font-semibold text-slate-800">
+        Cost: ₹{(costValue / 100000).toFixed(2)} L
+      </div>
     </label>
   );
 }
