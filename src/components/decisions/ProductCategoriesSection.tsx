@@ -29,6 +29,7 @@ type Category = {
   name: string;
   pricingTiers: PricingTiers;
   baseMonthlyDemand: number;
+  baseCost?: number;
   inventoryRanges?: InventoryRange[];
 };
 
@@ -180,7 +181,7 @@ export default function ProductCategoriesSection({
                 </span>
               </label>
               <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-full">
-                Demand: {category.baseMonthlyDemand}
+               Total Demand: {category.baseMonthlyDemand}
               </span>
             </div>
 
@@ -219,7 +220,7 @@ export default function ProductCategoriesSection({
                         className="w-4 h-4"
                       />
                       <span className="text-sm font-medium text-slate-700">{range.label}</span>
-                      <span className="text-xs text-slate-500">({range.min} - {range.max})</span>
+                      <span className="text-xs text-slate-500"> Cost: ₹{category.baseCost?.toLocaleString() || 'N/A'}</span>
                     </label>
                   ))}
                 </div>
