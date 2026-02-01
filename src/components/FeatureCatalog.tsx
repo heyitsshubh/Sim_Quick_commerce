@@ -41,7 +41,7 @@ export default function FeatureCatalog({
               type="checkbox"
               className="mt-1"
               checked={checked}
-              disabled={disabledAll}          // 🔒 LOCK
+              disabled={disabledAll}        
               onChange={() => onToggle(f.key)}
             />
 

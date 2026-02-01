@@ -38,16 +38,12 @@ export default function EmployeeCard({
         }
       `}
     >
-      {/* Top Gradient Bar */}
       <div
         className={`h-0.5 w-full ${
           fixed ? "bg-purple-400" : "bg-blue-400"
         }`}
       />
-
-      {/* Content Container */}
       <div className="flex flex-col items-center p-3 space-y-2.5">
-        {/* Profile Image & Status */}
         <div className="relative">
           <div
             className={`
@@ -68,7 +64,6 @@ export default function EmployeeCard({
             />
           </div>
 
-          {/* Selection/Fixed Indicator */}
           {fixed ? (
             <div className="absolute -top-1 -right-1 bg-purple-500 text-white rounded-full p-0.5 shadow-md">
               <Lock size={10} />
@@ -79,31 +74,20 @@ export default function EmployeeCard({
             </div>
           ) : null}
         </div>
-
-        {/* Employee Info */}
         <div className="text-center space-y-1 w-full">
-          {/* Name */}
           <h3 className="text-xs font-bold text-slate-800 line-clamp-1">{emp.name}</h3>
-
-          {/* Role */}
           <div className="flex items-center justify-center gap-0.5">
             <Briefcase size={10} className="text-blue-500 flex-shrink-0" />
             <p className="text-xs font-semibold text-slate-600 line-clamp-1">{emp.role}</p>
           </div>
-
-          {/* Expertise Badge */}
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-full px-1.5 py-0.5 inline-flex items-center gap-0.5 w-fit mx-auto border border-amber-100">
             <Star size={8} className="fill-amber-500 text-amber-500" />
             <p className="text-xs font-semibold text-amber-700 line-clamp-1">{emp.expertise}</p>
           </div>
         </div>
-
-        {/* Salary */}
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg px-1.5 py-1 border border-green-200 w-full text-center">
           <p className="text-xs text-green-600 font-bold">₹{(emp.salaryPerMonth / 1000).toFixed(0)}K</p>
         </div>
-
-        {/* Status Badge & Button */}
         {fixed ? (
           <div className="bg-purple-100 border border-purple-200 rounded-lg px-2 py-1 flex items-center justify-center gap-0.5 w-full">
             <Lock size={9} className="text-purple-600" />

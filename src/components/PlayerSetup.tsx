@@ -21,27 +21,17 @@ type Group = {
 
 export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
   const navigate = useNavigate();
-
-  // Login
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
-  // Dropdown data
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-
-  // Selected
   const [selectedSimulation, setSelectedSimulation] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
-
-  // UI
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
 
   const canLogin = username.trim() && password.trim();
-
-  // 🔐 LOGIN
   const handleLogin = async () => {
     try {
       setLoading(true);
@@ -72,8 +62,6 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
       setLoading(false);
     }
   };
-
-  // 🔽 FETCH SIMULATIONS (ON MOUNT)
   useEffect(() => {
     const fetchSimulations = async () => {
       try {
@@ -87,8 +75,6 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
     };
     fetchSimulations();
   }, []);
-
-  // 🔽 FETCH GROUPS (BASED ON SIMULATION)
   useEffect(() => {
     if (!selectedSimulation) {
       setGroups([]);
@@ -109,8 +95,6 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
     };
     fetchGroups();
   }, [selectedSimulation]);
-
-  // ▶️ START GAME
   const handleStartGame = () => {
     const selectedGroupObj = groups.find((g) => g._id === selectedGroup);
     const player: Player = {
@@ -138,8 +122,6 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
             {error}
           </div>
         )}
-
-        {/* LOGIN FORM (SUBMIT ON ENTER) */}
         {!loggedIn && (
           <form
             className="space-y-4"
@@ -173,8 +155,6 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
             </button>
           </form>
         )}
-
-        {/* SIMULATION & GROUP (AFTER LOGIN; ENABLED) */}
         {loggedIn && (
           <div className="space-y-4 mt-6">
             <select
