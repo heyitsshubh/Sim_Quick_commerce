@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, DollarSign, CreditCard } from 'lucide-react';
+import { TrendingUp, DollarSign, CreditCard } from 'lucide-react';
 import type { Player } from '../../types/game';
 
 interface FinancialsTabProps {

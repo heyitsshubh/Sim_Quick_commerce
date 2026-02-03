@@ -4,6 +4,12 @@ import WelcomeScreen from './components/WelcomeScreen';
 import PlayerSetup from './components/PlayerSetup';
 import GameBoard from './components/GameBoard';
 import Leaderboard from './components/Leaderboard';
+import Profile from './routes/Profile';
+import BusinessPlan from './routes/BusinessPlan';
+import Decisions from './routes/Decisions';
+import Analysis from './routes/Analysis';
+import Communication from './routes/Communication';
+import Results from './routes/Results';
 import { useState, useEffect } from 'react';
 
 function App() {
@@ -82,7 +88,7 @@ function App() {
           path="/results" 
           element={
             gameState.finished ? (
-              <Leaderboard
+              <Leaderboard 
                 players={gameState.players}
                 currentRound={gameState.currentRound}
                 onNextRound={() => {
@@ -95,11 +101,18 @@ function App() {
             )
           } 
         />
+ 
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/business-plan" element={<BusinessPlan />} />
+        <Route path="/decisions" element={<Decisions />} />
+        <Route path="/analysis" element={<Analysis />} />
+        <Route path="/communication" element={<Communication />} />
+        <Route path="/results" element={<Results />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
+ 
 export default App;

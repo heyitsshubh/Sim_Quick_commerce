@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import type { Player } from '../../types/game';
 
 interface AnalysisTabProps {
