@@ -106,6 +106,11 @@ function App() {
         <Route path="/business-plan" element={<BusinessPlan />} />
         <Route path="/decisions" element={<Decisions />} />
         <Route path="/analysis" element={<Analysis />} />
+        <Route path="/analysis/category/:categoryId" element={<Analysis />} />
+        <Route path="/analysis/premium" element={<Analysis />} />
+        <Route path="/analysis/standard" element={<Analysis />} />
+        <Route path="/analysis/basic" element={<Analysis />} />
+        <Route path="/analysis/discount" element={<Analysis />} />
         <Route path="/communication" element={<Communication />} />
         <Route path="/results" element={<Results />} />
 
