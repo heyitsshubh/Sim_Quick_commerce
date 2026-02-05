@@ -85,7 +85,7 @@ function App() {
         />
         
         <Route 
-          path="/results" 
+          path="/decisions" 
           element={
             gameState.finished ? (
               <Leaderboard 
