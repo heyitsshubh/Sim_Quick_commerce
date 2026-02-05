@@ -70,7 +70,6 @@ export default function GameBoard({
       <div className="border-b border-slate-200 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
 
-          {/* 🔥 TAB OPTIONS (ABOVE ROUNDS) */}
           <TopNav />
 
           {/* ROUND HEADER */}

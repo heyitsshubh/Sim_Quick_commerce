@@ -1,6 +1,11 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Lock, Unlock } from "lucide-react";
 import axios from "axios";
+
+
+/* ================= TYPES ================= */
 
 type Category = {
   _id: string;
@@ -11,26 +16,26 @@ type Breakdown = {
   multiplier: number;
   keyIndicator: string;
   achievedPoints: number;
-  totalScore: number;
+  yourTotalScore?: number; // backend may send this
+  totalScore?: number;     // fallback
 };
 
 type Multiplier = {
   title: string;
   description: string;
-  value: number;
+  multiplier?: number;
+  value?: number;
 };
 
 type AnalysisData = {
   coreScore: number;
   breakdown: Breakdown[];
   multiplierOnCoreScore: number;
-  multipliers: Multiplier[];
-  totalScore: number;
-  competitors?: Array<{
-    name: string;
-    score: number;
-  }>;
-  localCompetition?: number;
+  multipliers?: Multiplier[];
+  coreMultipliers?: Multiplier[];
+  totalScore?: number;
+  finalScore?: number;
+  competitors?: { name: string; score: number }[];
   market?: {
     marketShare: number;
     totalMarketSize: number;
@@ -45,52 +50,49 @@ type Segment = "premium" | "standard" | "basic" | "discount";
 const SEGMENTS: Segment[] = ["premium", "standard", "basic", "discount"];
 const SELECTION_KEY = "step2_selections";
 
+/* ================= COMPONENT ================= */
+
 export default function AnalysisPage() {
   const navigate = useNavigate();
-  const { categoryId, segment } = useParams<{
-    categoryId?: string;
-    segment?: Segment;
-  }>();
+  const { categoryId, segment } = useParams<{ categoryId?: string; segment?: Segment }>();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [activeSegment, setActiveSegment] = useState<Segment | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [currentRound] = useState(1);
+  const maxRounds = 8;
 
-  /* ================= LOAD SELECTED CATEGORIES ================= */
+  /* ================= LOAD CATEGORIES ================= */
+
   useEffect(() => {
     const loadCategories = async () => {
       const res = await axios.get(
         "https://sim-quick-commerce-backend.onrender.com/api/step-two/categories"
       );
 
-      const allCategories: Category[] = res.data || [];
+      const all: Category[] = res.data || [];
 
-      const rawSelections = localStorage.getItem(SELECTION_KEY);
-      const selections = rawSelections ? JSON.parse(rawSelections) : {};
+      const raw = localStorage.getItem(SELECTION_KEY);
+      const selections = raw ? JSON.parse(raw) : {};
 
-      const selected = allCategories.filter(
-        (cat) => selections[cat._id]
-      );
-
+      const selected = all.filter((c) => selections[c._id]);
       setCategories(selected);
 
-      // restore from URL
       if (categoryId) {
-        const cat = selected.find((c) => c._id === categoryId);
-        if (cat) setActiveCategory(cat);
+        const found = selected.find((c) => c._id === categoryId);
+        if (found) setActiveCategory(found);
       }
 
-      if (segment) {
-        setActiveSegment(segment);
-      }
+      if (segment) setActiveSegment(segment);
     };
 
     loadCategories();
   }, [categoryId, segment]);
 
   /* ================= LOAD ANALYSIS ================= */
+
   useEffect(() => {
     if (!activeCategory || !activeSegment) return;
 
@@ -103,25 +105,8 @@ export default function AnalysisPage() {
           `https://sim-quick-commerce-backend.onrender.com/api/analysis/${activeCategory.name}/${activeSegment}`
         );
 
-        console.log("=== FULL API RESPONSE ===");
-        console.log("Full Response:", res.data);
-        console.log("Response Keys:", Object.keys(res.data));
-        console.log("Analysis Object:", res.data.analysis);
-        
-        if (res.data.analysis) {
-          console.log("Analysis Keys:", Object.keys(res.data.analysis));
-          console.log("Core Score:", res.data.analysis.coreScore);
-          console.log("Breakdown:", res.data.analysis.breakdown);
-          console.log("Multipliers:", res.data.analysis.multipliers);
-          console.log("Total Score:", res.data.analysis.totalScore);
-        }
-        
-        // Try both possible data structures
         const data = res.data.analysis || res.data;
         setAnalysisData(data);
-        
-        console.log("=== DATA SET TO STATE ===");
-        console.log("State Data:", data);
       } catch (err) {
         console.error("Analysis fetch failed", err);
       } finally {
@@ -132,217 +117,273 @@ export default function AnalysisPage() {
     loadAnalysis();
   }, [activeCategory, activeSegment]);
 
+  /* ================= UI ================= */
+
   return (
-    <div className="flex min-h-screen bg-slate-100">
-      {/* ================= LEFT PANEL ================= */}
-      <div className="w-96 bg-white border-r p-6 space-y-6 overflow-y-auto">
-        <h2 className="text-lg font-bold">Selected Products</h2>
+    <div className="min-h-screen bg-slate-50">
 
-        {categories.map((cat) => (
-          <div key={cat._id} className="space-y-3 pb-4 border-b">
-            {/* CATEGORY BUTTON */}
-            <button
-              onClick={() => {
-                setActiveCategory(cat);
-                setActiveSegment(null);
-                setAnalysisData(null);
-                navigate(`/analysis/category/${cat._id}`);
-              }}
-              className={`w-full text-left p-3 rounded-lg border font-semibold ${
-                activeCategory?._id === cat._id
-                  ? "bg-blue-100 border-blue-500"
-                  : "bg-slate-50"
-              }`}
-            >
-              📦 {cat.name}
-            </button>
-
-            {/* SEGMENT BUTTONS */}
-            <div className="grid grid-cols-2 gap-2">
-              {SEGMENTS.map((seg) => (
-                <button
-                  key={seg}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setActiveSegment(seg);
-                    navigate(`/analysis/category/${cat._id}/${seg}`);
-                  }}
-                  className={`p-2 rounded-lg border text-xs font-semibold ${
-                    activeSegment === seg && activeCategory?._id === cat._id
-                      ? "bg-green-100 border-green-500"
-                      : "bg-slate-50"
-                  }`}
-                >
-                  {seg.toUpperCase()}
-                </button>
-              ))}
-            </div>
+      {/* HEADER */}
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold text-slate-900">Round {currentRound} of {maxRounds}</h1>
+            <p className="text-slate-600 text-sm mt-1">Product Category Analysis</p>
           </div>
-        ))}
+
+          {/* ROUNDS NAVIGATION */}
+          <div className="flex items-center gap-2 overflow-x-auto">
+            {Array.from({ length: maxRounds }, (_, i) => i + 1).map((round) => (
+              <button
+                key={round}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                  round === currentRound
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : round < currentRound
+                    ? "bg-green-100 text-green-700"
+                    : "bg-slate-100 text-slate-400"
+                }`}
+              >
+                {round <= currentRound ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                <span>Round {round}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* ================= RIGHT PANEL ================= */}
-      <div className="flex-1 p-8 overflow-y-auto">
-        {!activeCategory && (
-          <div className="text-center text-slate-500 mt-20">
-            👈 Select a category
+      {/* MAIN LAYOUT */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="flex gap-6">
+          
+          {/* LEFT SIDEBAR */}
+          <div className="w-64 flex-shrink-0">
+            <div className="bg-white rounded-lg shadow p-4 space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-700 mb-2">CATEGORIES</h3>
+                <p className="text-xs text-slate-500 mb-4">Select a product category</p>
+              </div>
+
+              <div className="space-y-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat._id}
+                    onClick={() => {
+                      setActiveCategory(cat);
+                      setActiveSegment(null);
+                      setAnalysisData(null);
+                      navigate(`/analysis/category/${cat._id}`);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      activeCategory?._id === cat._id
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    📦 {cat.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h4 className="text-xs font-bold text-slate-700 mb-3">SEGMENTS</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {SEGMENTS.map((seg) => (
+                    <button
+                      key={seg}
+                      onClick={() => {
+                        if (activeCategory) {
+                          setActiveSegment(seg);
+                          navigate(`/analysis/category/${activeCategory._id}/${seg}`);
+                        }
+                      }}
+                      disabled={!activeCategory}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeSegment === seg && activeCategory
+                          ? "bg-green-600 text-white shadow-md"
+                          : activeCategory
+                          ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          : "bg-slate-50 text-slate-400 cursor-not-allowed"
+                      }`}
+                    >
+                      {seg.charAt(0).toUpperCase() + seg.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
 
-        {activeCategory && !activeSegment && (
-          <div className="text-center text-slate-500 mt-20">
-            👉 Select Premium / Standard / Basic / Discount
-          </div>
-        )}
-
-        {loading && (
-          <div className="text-center mt-20">Loading analysis...</div>
-        )}
-
-        {!loading && activeCategory && activeSegment && !analysisData && (
-          <div className="text-center mt-20 text-red-500">
-            No data received from API
-          </div>
-        )}
-
-        {!loading && analysisData && activeCategory && activeSegment && (
-          <div className="space-y-8">
-            <h2 className="text-2xl font-bold">
-              {activeCategory.name} – {activeSegment?.toUpperCase()}
-            </h2>
-
-            {/* CORE SCORE */}
-            {analysisData.coreScore !== undefined && (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-semibold mb-2">Core Score</h3>
-                <p className="text-4xl font-bold text-blue-600">
-                  {analysisData.coreScore}
-                </p>
+          {/* RIGHT CONTENT PANEL */}
+          <div className="flex-1 bg-white rounded-lg shadow p-8 overflow-y-auto">
+            {!activeCategory && (
+              <div className="text-center py-12">
+                <p className="text-slate-500 text-lg">👈 Select a category to begin</p>
               </div>
             )}
 
-            {/* BREAKDOWN */}
-            {analysisData.breakdown && analysisData.breakdown.length > 0 && (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-semibold mb-4">Breakdown</h3>
-                <table className="w-full border rounded">
-                  <thead className="bg-slate-100">
-                    <tr>
-                      <th className="p-2 text-left">Multiplier</th>
-                      <th className="p-2 text-left">Indicator</th>
-                      <th className="p-2 text-left">Achieved</th>
-                      <th className="p-2 text-left">Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {analysisData.breakdown.map((b, i) => (
-                      <tr key={i} className="border-t">
-                        <td className="p-2">{b.multiplier ?? 'N/A'}</td>
-                        <td className="p-2">{b.keyIndicator ?? 'N/A'}</td>
-                        <td className="p-2">{b.achievedPoints ?? 'N/A'}</td>
-                        <td className="p-2 font-semibold">{b.totalScore ?? 'N/A'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {activeCategory && !activeSegment && (
+              <div className="text-center py-12">
+                <p className="text-slate-500 text-lg">👉 Select a segment to view analysis</p>
               </div>
             )}
 
-            {/* MULTIPLIERS */}
-            {analysisData.multipliers && analysisData.multipliers.length > 0 && (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-semibold mb-4">
-                  Multipliers {analysisData.multiplierOnCoreScore && `(×${analysisData.multiplierOnCoreScore})`}
-                </h3>
-                <div className="space-y-3">
-                  {analysisData.multipliers.map((m, i) => (
-                    <div key={i} className="bg-slate-50 p-4 rounded-lg border">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-semibold">{m.title ?? 'Untitled'}</h4>
-                          <p className="text-sm text-slate-600">{m.description ?? ''}</p>
+            {loading && (
+              <div className="text-center py-12">
+                <p className="text-slate-600">Loading analysis data...</p>
+              </div>
+            )}
+
+            {!loading && analysisData && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                    {activeCategory?.name} - {activeSegment?.toUpperCase()}
+                  </h2>
+                  <p className="text-slate-600">Detailed Analysis Report</p>
+                </div>
+
+                {/* CORE SCORE */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Core Score</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-700 font-semibold mb-2">Score</p>
+                      <p className="text-4xl font-bold text-blue-700">
+                        {analysisData.coreScore.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BREAKDOWN TABLE */}
+                {analysisData.breakdown && analysisData.breakdown.length > 0 && (
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">Score Breakdown</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-slate-100 border-b">
+                          <tr>
+                            <th className="px-4 py-2 text-left font-semibold">Multiplier</th>
+                            <th className="px-4 py-2 text-left font-semibold">Key Indicator</th>
+                            <th className="px-4 py-2 text-left font-semibold">Achieved</th>
+                            <th className="px-4 py-2 text-left font-semibold">Score</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analysisData.breakdown.map((b, i) => (
+                            <tr key={i} className="border-b hover:bg-slate-50">
+                              <td className="px-4 py-2 text-slate-700">{b.multiplier}</td>
+                              <td className="px-4 py-2 text-slate-700">{b.keyIndicator}</td>
+                              <td className="px-4 py-2 text-slate-700">{b.achievedPoints}</td>
+                              <td className="px-4 py-2 font-semibold text-blue-700">
+                                {b.totalScore ?? b.yourTotalScore ?? "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* MULTIPLIERS */}
+                {(analysisData.multipliers || analysisData.coreMultipliers) && (
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">
+                      Multiplier on Core Score ({analysisData.multiplierOnCoreScore}x)
+                    </h3>
+                    <div className="space-y-3">
+                      {(analysisData.multipliers ?? analysisData.coreMultipliers)?.map((m, i) => (
+                        <div key={i} className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="font-semibold text-slate-900">{m.title}</p>
+                              <p className="text-sm text-slate-600 mt-1">{m.description}</p>
+                            </div>
+                            <p className="text-2xl font-bold text-green-600">
+                              ×{m.value ?? m.multiplier}
+                            </p>
+                          </div>
                         </div>
-                        <span className="text-xl font-bold text-green-600">×{m.value ?? 0}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* FINAL SCORE */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 rounded-lg border border-blue-800">
+                  <p className="text-sm font-semibold opacity-90 mb-2">TOTAL SCORE</p>
+                  <p className="text-5xl font-bold">
+                    {((analysisData.totalScore ?? analysisData.finalScore) ?? 0).toLocaleString('en-IN', {
+                      maximumFractionDigits: 2
+                    })}
+                  </p>
+                </div>
+
+                {/* COMPETITORS */}
+                {analysisData.competitors && analysisData.competitors.length > 0 && (
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">Competitor Comparison</h3>
+                    <div className="space-y-2">
+                      {analysisData.competitors.map((comp, i) => (
+                        <div key={i} className="flex justify-between items-center p-4 bg-slate-50 rounded-lg border">
+                          <span className="font-semibold text-slate-900">{comp.name}</span>
+                          <span className="text-lg font-bold text-blue-600">
+                            {comp.score.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* MARKET DATA */}
+                {analysisData.market && (
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">Market Analysis</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <p className="text-xs text-blue-700 font-semibold mb-1">Market Share</p>
+                        <p className="text-2xl font-bold text-blue-700">
+                          {analysisData.market.marketShare?.toFixed(1)}%
+                        </p>
+                      </div>
+                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <p className="text-xs text-purple-700 font-semibold mb-1">Market Size</p>
+                        <p className="text-lg font-bold text-purple-700">
+                          ₹{(analysisData.market.totalMarketSize / 100000).toFixed(0)}L
+                        </p>
+                      </div>
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <p className="text-xs text-green-700 font-semibold mb-1">Your Sales</p>
+                        <p className="text-lg font-bold text-green-700">
+                          ₹{(analysisData.market.yourSales / 100000).toFixed(0)}L
+                        </p>
                       </div>
                     </div>
-                  ))}
+
+              <div className="border-t pt-6 mt-6">
+                <h2 className="text-xl font-bold mb-4">Market size</h2>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>Total market</div>
+                  <div className="text-right">{analysisData.market.totalMarketSize}</div>
+
+                  <div>Your sales</div>
+                  <div className="text-right">{analysisData.market.yourSales}</div>
+
+                  <div>Direct demand</div>
+                  <div className="text-right">{analysisData.market.directDemand}</div>
+
+                  <div>Substitute demand</div>
+                  <div className="text-right">{analysisData.market.substituteDemand}</div>
                 </div>
               </div>
-            )}
-
-            {/* TOTAL SCORE */}
-            {analysisData.totalScore !== undefined && (
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-8 rounded-lg shadow-lg text-white">
-                <h3 className="font-semibold text-xl mb-2">
-                  Total Score
-                </h3>
-                <p className="text-6xl font-bold">
-                  {analysisData.totalScore}
-                </p>
-              </div>
-            )}
-
-            {/* COMPETITORS */}
-            {analysisData.competitors && analysisData.competitors.length > 0 && (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-semibold mb-4 text-lg">Competitors Comparison</h3>
-                <div className="space-y-3">
-                  {analysisData.competitors.map((comp, i) => (
-                    <div key={i} className="flex justify-between items-center p-4 bg-slate-50 rounded-lg border">
-                      <div>
-                        <p className="font-semibold text-slate-900">{comp.name}</p>
-                        <p className="text-sm text-slate-500">Score: {comp.score.toFixed(2)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-blue-600">{comp.score.toFixed(0)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* LOCAL COMPETITION */}
-            {analysisData.localCompetition !== undefined && (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-semibold mb-2">Local Competition</h3>
-                <p className="text-4xl font-bold text-orange-600">{analysisData.localCompetition}</p>
-                <p className="text-sm text-slate-600 mt-2">Competitors in your area</p>
-              </div>
-            )}
-
-            {/* MARKET DATA */}
-            {analysisData.market && (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-semibold mb-4 text-lg">Market Analysis</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <p className="text-sm text-slate-600">Market Share</p>
-                    <p className="text-2xl font-bold text-blue-600">{analysisData.market.marketShare?.toFixed(2)}%</p>
                   </div>
-                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                    <p className="text-sm text-slate-600">Total Market Size</p>
-                    <p className="text-2xl font-bold text-purple-600">₹{(analysisData.market.totalMarketSize / 100000).toFixed(1)}L</p>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <p className="text-sm text-slate-600">Your Sales</p>
-                    <p className="text-2xl font-bold text-green-600">₹{(analysisData.market.yourSales / 100000).toFixed(1)}L</p>
-                  </div>
-                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                    <p className="text-sm text-slate-600">Direct Demand</p>
-                    <p className="text-2xl font-bold text-yellow-600">₹{(analysisData.market.directDemand / 100000).toFixed(1)}L</p>
-                  </div>
-                  {analysisData.market.substituteDemand !== undefined && (
-                    <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                      <p className="text-sm text-slate-600">Substitute Demand</p>
-                      <p className="text-2xl font-bold text-red-600">₹{(analysisData.market.substituteDemand / 100000).toFixed(1)}L</p>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
