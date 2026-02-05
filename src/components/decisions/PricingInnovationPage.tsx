@@ -153,11 +153,17 @@ const pricingCategoriesData = pricingCategories.map(cat => {
                   </div>
                   <div className="text-right">
                     {isSelected ? (
-                      <p className="text-lg font-bold text-blue-600">
-                        Final Buying Price:{adjustedDemand}
-                      </p>
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 rounded-xl p-4 min-w-[200px]">
+                        <p className="text-xs font-semibold text-green-700 mb-1">FINAL BUYING PRICE</p>
+                        <p className="text-3xl font-bold text-green-700">
+                          ₹{adjustedDemand.toLocaleString('en-IN')}
+                        </p>
+                      </div>
                     ) : (
-                      <p className="text-sm text-slate-500">Final Buying Price: —</p>
+                      <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 min-w-[200px]">
+                        <p className="text-xs font-semibold text-gray-400 mb-1">FINAL BUYING PRICE</p>
+                        <p className="text-3xl font-bold text-gray-400">—</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -199,25 +205,35 @@ const pricingCategoriesData = pricingCategories.map(cat => {
               return (
                 <div
                   key={cat.categoryId}
-                  className={`border rounded-xl p-4 ${
-                    isSelected ? 'bg-slate-50' : 'bg-slate-50/60 opacity-70'
+                  className={`border rounded-xl p-6 transition-all ${
+                    isSelected 
+                      ? 'bg-white border-blue-200 shadow-md' 
+                      : 'bg-slate-50/60 opacity-70 border-slate-200'
                   }`}
                 >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h5 className="font-medium text-lg">{cat.name}</h5>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h5 className="font-bold text-xl text-slate-900">{cat.name}</h5>
                       {!isSelected && (
-                        <p className="text-xs text-slate-500">Not selected</p>
+                        <p className="text-xs text-slate-500 mt-1">Not selected in categories</p>
                       )}
-                      <p className="text-sm text-slate-600">Base: {cat.baseMonthlyDemand}</p>
+                      <p className="text-sm text-slate-600 mt-2">
+                        <span className="font-medium">Base:</span>{cat.baseMonthlyDemand.toLocaleString()}
+                      </p>
                     </div>
                     <div className="text-right">
                       {isSelected ? (
-                        <p className="text-lg font-bold text-blue-600">
-                          Final Selling Price:₹{calculatedPrice}
-                        </p>
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl p-4 min-w-[200px]">
+                          <p className="text-xs font-semibold text-blue-700 mb-1">FINAL SELLING PRICE</p>
+                          <p className="text-3xl font-bold text-blue-700">
+                            ₹{calculatedPrice.toLocaleString('en-IN')}
+                          </p>
+                        </div>
                       ) : (
-                        <p className="text-sm text-slate-500">Final Selling Price: —</p>
+                        <div className="bg-slate-100 border border-slate-300 rounded-xl p-4 min-w-[200px]">
+                          <p className="text-xs font-semibold text-slate-500 mb-1">FINAL SELLING PRICE</p>
+                          <p className="text-2xl font-bold text-slate-400">—</p>
+                        </div>
                       )}
                     </div>
                   </div>
