@@ -16,18 +16,15 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Fallback total cost computation when API impact is unavailable
   const computeTotalCost = (s: any, cfg: any) => {
     if (!s) return 0;
     const sumSection = (sectionName: 'acquisition'|'retention'|'partnerships') =>
       Object.entries(s[sectionName] || {}).reduce((acc: number, [key, item]: any) => {
         if (!item?.enabled) return acc;
-        // For sliders (like googleAds, facebookAds), use the budget from state
         if (typeof item?.budget === 'number') {
           console.log(`Adding ${sectionName}.${key} budget:`, item.budget);
           return acc + item.budget;
         }
-        // For checkboxes, use the cost from config
         const conf = cfg?.[sectionName]?.[key] || {};
         if (typeof conf.cost === 'number') {
           console.log(`Adding ${sectionName}.${key} cost:`, conf.cost);
@@ -40,8 +37,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
     return total;
   };
 
-  /* ================= LOAD CONFIG + SAFE STATE ================= */
-
   useEffect(() => {
     const load = async () => {
       try {
@@ -50,8 +45,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         );
 
         console.log("Raw API response:", data);
-
-        // Reorganize flat API response into nested structure
         const organizedConfig = {
           acquisition: {
             googleAds: data.marketing?.googleAds,
@@ -76,12 +69,10 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         console.log("Organized config:", organizedConfig);
 
         setConfig(organizedConfig);
-
-        // Build defaults dynamically from API config
         const buildSectionDefaults = (sectionConfig: any) => {
           const defaults: any = {};
           Object.entries(sectionConfig || {}).forEach(([key, val]: any) => {
-            if (!val) return; // Skip if value is undefined
+            if (!val) return; 
             if (val.minBudget !== undefined) {
               defaults[key] = { enabled: false, budget: val.minBudget };
             } else if (val.minPercent !== undefined) {
@@ -89,7 +80,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
             } else if (val.minCost !== undefined) {
               defaults[key] = { enabled: false, cost: val.minCost };
             } else {
-              // Simple toggle-only option (e.g., setupCost or revenueBoost)
               defaults[key] = { enabled: false };
             }
           });
@@ -108,12 +98,10 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            // Only merge items that exist in the current config
             const mergeSection = (sectionName: 'acquisition'|'retention'|'partnerships') => {
               const base = baseState[sectionName];
               const saved = parsed[sectionName] || {};
               const merged: any = {};
-              // Only keep items that exist in the current config
               Object.keys(base).forEach(key => {
                 merged[key] = saved[key] ? { ...base[key], ...saved[key] } : base[key];
               });
@@ -142,8 +130,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
     load();
   }, []);
 
-  /* ================= LIVE CALC ================= */
-
   useEffect(() => {
     if (!state) return;
 
@@ -157,8 +143,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
       .then(res => setImpact(res.data))
       .catch(() => {});
   }, [state]);
-
-  /* ================= SAVE ================= */
 
   const handleSave = async () => {
     setSaving(true);
@@ -181,12 +165,8 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
     return <div className="p-6">Loading Marketing Setup...</div>;
   }
 
-  /* ================= UI ================= */
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 px-4 md:px-0">
-
-      {/* LEFT */}
       <div className="lg:col-span-2 space-y-4 md:space-y-6">
         <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">Marketing & Growth</h2>
 
@@ -195,7 +175,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
             const dataObj = state.acquisition[key];
             const labelMap: any = {
               googleAds: "Google Ads",
-              // Map backend `facebookAds` to Instagram for UI
               facebookAds: "Instagram Ads",
               influencerMarketing: "Influencer Marketing",
               referralProgram: "Referral Program",
@@ -209,7 +188,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
               firstOrderDiscount: "Critical conversion driver",
             };
 
-            // Check if item uses slider (either has minBudget or appliesTo is "Slider")
             const isSlider = (key === "googleAds" || key === "facebookAds") || val.minBudget !== undefined;
             
             if (isSlider) {
@@ -254,7 +232,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
         <Section title="Retention">
           {Object.entries(config.retention).map(([key, val]: any) => {
             const dataObj = state.retention[key];
-            // All retention items should be checkboxes (no sliders)
             const labelMap: any = {
               pushNotifications: "Push Notifications",
               loyaltyProgram: "Loyalty Program",
@@ -291,7 +268,6 @@ export default function MarketingSection({ round, onComplete }: MarketingSection
               housingSociety: "Housing Society",
             };
 
-            // All partnership items should be checkboxes (no sliders)
             return (
               <Checkbox
                 key={key}
@@ -321,16 +297,12 @@ className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white
           {saving ? "Saving..." : "Save Marketing Strategy"}
         </button>
       </div>
-
-      {/* RIGHT */}
       <div className="space-y-6 sticky top-6 h-fit">
         <ImpactCard impact={impact} fallbackTotalCost={computeTotalCost(state, config)} />
       </div>
     </div>
   );
 }
-
-/* ================= HELPERS ================= */
 
 function toggle(state:any,set:any,section:string,key:string){
   const current = state[section]?.[key] || { enabled: false };
@@ -357,8 +329,6 @@ function update(state:any,set:any,section:string,key:string,field:string,value:n
   });
 }
 
-/* ================= UI COMPONENTS ================= */
-
 function Section({ title, children }: any) {
   return (
     <div className="bg-white border rounded-xl md:rounded-2xl p-4 md:p-5 space-y-3 md:space-y-4 shadow-sm">
@@ -383,12 +353,9 @@ function BudgetOption({ label, desc, data, min, max, cost, onToggle, onChange }:
 
       <p className="text-xs text-slate-600">{desc}</p>
 
-      {/* 🔥 COST ALWAYS VISIBLE */}
       <div className="text-sm font-semibold text-slate-800">
         Cost: ₹{(costValue / 100000).toFixed(2)} L
       </div>
-
-      {/* SLIDER ONLY WHEN ENABLED */}
       {data?.enabled && (
         <div className="mt-2 space-y-1">
           <input
@@ -411,9 +378,6 @@ function BudgetOption({ label, desc, data, min, max, cost, onToggle, onChange }:
     </div>
   );
 }
-
-
-// CostOption removed: only Google Ads and Instagram use sliders; others are checkboxes
 
 function Checkbox({ label, checked, cost, onToggle }: any) {
   const costValue = cost ?? 0;
@@ -444,7 +408,6 @@ function ImpactCard({ impact, fallbackTotalCost }: any) {
       </div>
       <div className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">
         {(() => {
-          // Prioritize local fallback so UI reflects checkbox toggles instantly
           const total = (fallbackTotalCost && fallbackTotalCost > 0)
             ? fallbackTotalCost
             : (impact?.totalCost ?? 0);

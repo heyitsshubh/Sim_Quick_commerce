@@ -46,10 +46,8 @@ export default function QualitySelector({
   
   const currentMultiplier = config.qualityMultipliers[safeValue.toString()] || 1;
 
-  /* ================= UI ================= */
   return (
     <div className="space-y-6">
-      {/* QUALITY LEVEL SELECTION */}
       <div className="bg-white rounded-2xl p-6 border">
         <h3 className="text-xl font-bold mb-4">Select Quality Level (Applies to All Categories)</h3>
 
@@ -82,8 +80,6 @@ export default function QualitySelector({
           ))}
         </div>
       </div>
-
-      {/* SELECTED QUALITY DISPLAY - SHOWN ONCE */}
       <div className={`${selectedQuality.color} p-6 rounded-2xl text-white`}>
         <div className="flex items-center gap-3 mb-3">
           <Star className="w-10 h-10 fill-current" />
@@ -99,8 +95,6 @@ export default function QualitySelector({
           This quality level will be applied to all selected product categories
         </p>
       </div>
-
-      {/* LOCK NOTICE */}
       {qualityLevels.some(q => q.locked) && (
         <div className="bg-purple-50 border p-5 rounded-2xl">
           <p className="font-bold text-purple-900">Premium Levels Locked</p>

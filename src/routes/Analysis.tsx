@@ -4,9 +4,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Lock, Unlock } from "lucide-react";
 import axios from "axios";
 
-
-/* ================= TYPES ================= */
-
 type Category = {
   _id: string;
   name: string;
@@ -16,8 +13,8 @@ type Breakdown = {
   multiplier: number;
   keyIndicator: string;
   achievedPoints: number;
-  yourTotalScore?: number; // backend may send this
-  totalScore?: number;     // fallback
+  yourTotalScore?: number; 
+  totalScore?: number;     
 };
 
 type Multiplier = {
@@ -50,8 +47,6 @@ type Segment = "premium" | "standard" | "basic" | "discount";
 const SEGMENTS: Segment[] = ["premium", "standard", "basic", "discount"];
 const SELECTION_KEY = "step2_selections";
 
-/* ================= COMPONENT ================= */
-
 export default function AnalysisPage() {
   const navigate = useNavigate();
   const { categoryId, segment } = useParams<{ categoryId?: string; segment?: Segment }>();
@@ -63,8 +58,6 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(false);
   const [currentRound] = useState(1);
   const maxRounds = 8;
-
-  /* ================= LOAD CATEGORIES ================= */
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -91,8 +84,6 @@ export default function AnalysisPage() {
     loadCategories();
   }, [categoryId, segment]);
 
-  /* ================= LOAD ANALYSIS ================= */
-
   useEffect(() => {
     if (!activeCategory || !activeSegment) return;
 
@@ -117,20 +108,14 @@ export default function AnalysisPage() {
     loadAnalysis();
   }, [activeCategory, activeSegment]);
 
-  /* ================= UI ================= */
-
   return (
     <div className="min-h-screen bg-slate-50">
-
-      {/* HEADER */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="mb-4">
             <h1 className="text-2xl font-bold text-slate-900">Round {currentRound} of {maxRounds}</h1>
             <p className="text-slate-600 text-sm mt-1">Product Category Analysis</p>
           </div>
-
-          {/* ROUNDS NAVIGATION */}
           <div className="flex items-center gap-2 overflow-x-auto">
             {Array.from({ length: maxRounds }, (_, i) => i + 1).map((round) => (
               <button
@@ -151,11 +136,9 @@ export default function AnalysisPage() {
         </div>
       </div>
 
-      {/* MAIN LAYOUT */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="flex gap-6">
-          
-          {/* LEFT SIDEBAR */}
+    
           <div className="w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow p-4 space-y-4">
               <div>
@@ -212,8 +195,6 @@ export default function AnalysisPage() {
               </div>
             </div>
           </div>
-
-          {/* RIGHT CONTENT PANEL */}
           <div className="flex-1 bg-white rounded-lg shadow p-8 overflow-y-auto">
             {!activeCategory && (
               <div className="text-center py-12">
@@ -242,7 +223,6 @@ export default function AnalysisPage() {
                   <p className="text-slate-600">Detailed Analysis Report</p>
                 </div>
 
-                {/* CORE SCORE */}
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-4">Core Score</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -255,7 +235,6 @@ export default function AnalysisPage() {
                   </div>
                 </div>
 
-                {/* BREAKDOWN TABLE */}
                 {analysisData.breakdown && analysisData.breakdown.length > 0 && (
                   <div className="border-t pt-6">
                     <h3 className="text-lg font-bold text-slate-900 mb-4">Score Breakdown</h3>
@@ -285,8 +264,6 @@ export default function AnalysisPage() {
                     </div>
                   </div>
                 )}
-
-                {/* MULTIPLIERS */}
                 {(analysisData.multipliers || analysisData.coreMultipliers) && (
                   <div className="border-t pt-6">
                     <h3 className="text-lg font-bold text-slate-900 mb-4">
@@ -310,7 +287,6 @@ export default function AnalysisPage() {
                   </div>
                 )}
 
-                {/* FINAL SCORE */}
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 rounded-lg border border-blue-800">
                   <p className="text-sm font-semibold opacity-90 mb-2">TOTAL SCORE</p>
                   <p className="text-5xl font-bold">
@@ -319,8 +295,6 @@ export default function AnalysisPage() {
                     })}
                   </p>
                 </div>
-
-                {/* COMPETITORS */}
                 {analysisData.competitors && analysisData.competitors.length > 0 && (
                   <div className="border-t pt-6">
                     <h3 className="text-lg font-bold text-slate-900 mb-4">Competitor Comparison</h3>
@@ -336,8 +310,6 @@ export default function AnalysisPage() {
                     </div>
                   </div>
                 )}
-
-                {/* MARKET DATA */}
                 {analysisData.market && (
                   <div className="border-t pt-6">
                     <h3 className="text-lg font-bold text-slate-900 mb-4">Market Analysis</h3>

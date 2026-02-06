@@ -73,10 +73,6 @@ export default function BusinessModelSection({ onComplete }: BusinessModelSectio
         }
       );
 
-      // Don't clear localStorage - keep the data for when user comes back
-      // localStorage.removeItem('step1_deliveryModel');
-      // localStorage.removeItem('step1_positioning');
-
       onComplete({
         businessModel: deliveryModel,
         marketPositioning: positioning,

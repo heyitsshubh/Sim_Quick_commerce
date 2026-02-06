@@ -137,8 +137,6 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
     hyperlocalWarehousing,
     config
   ]);
-
-  /* ================= SAVE ================= */
   const handleSubmit = async () => {
     try {
       setSaving(true);
@@ -178,12 +176,8 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
 
   if (loading) return <div>Loading...</div>;
   if (!config) return <div className="text-red-600">Config not found</div>;
-
-  /* ================= UI ================= */
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      {/* ================= LEFT CONTROLS ================= */}
       <div className="lg:col-span-2 space-y-6">
         <h2 className="text-2xl font-bold">Delivery Fleet & Logistics</h2>
 
@@ -193,7 +187,6 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
 
         {ownFleet && (
           <div className="bg-slate-50 p-4 rounded-xl space-y-4">
-            {/* CURRENT FLEET INFO */}
             <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
               <p className="text-sm font-medium text-blue-900 mb-2">ℹ️ Current Fleet Status (All Players):</p>
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -300,8 +293,6 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
           {saving ? "Saving..." : "Save Delivery Setup"}
         </button>
       </div>
-
-      {/* ================= RIGHT IMPACT PANEL ================= */}
       <div className="space-y-4">
         {impact?.deliveryFleet && (
           <ImpactCard title="Delivery Fleet Impact" icon="🚚" data={impact.deliveryFleet} />
@@ -343,8 +334,6 @@ export default function DeliverySection({ round, onComplete }: DeliverySectionPr
   );
 }
 
-/* ================= UI COMPONENTS ================= */
-
 function Checkbox({ label, checked, set }: any) {
   return (
     <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
@@ -354,7 +343,7 @@ function Checkbox({ label, checked, set }: any) {
   );
 }
 
-/* ================= BEAUTIFUL IMPACT CARD ================= */
+
 
 function ImpactCard({ title, data, icon }: any) {
   return (

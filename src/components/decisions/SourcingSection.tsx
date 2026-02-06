@@ -7,12 +7,8 @@ export default function SourcingSection({ round, onComplete }: any) {
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(
     localStorage.getItem("selectedSupplierId")
   );
-
-  // const [impact, setImpact] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  /* ================= LOAD SUPPLIERS ================= */
 
   useEffect(() => {
     axios
@@ -21,17 +17,10 @@ export default function SourcingSection({ round, onComplete }: any) {
       .catch(() => setError("Failed to load suppliers"));
   }, []);
 
-  /* ================= CALCULATE IMPACT ================= */
-
-
-  /* ================= SELECT SUPPLIER ================= */
-
   const selectSupplier = (supplierId: string) => {
     setSelectedSupplierId(supplierId);
     localStorage.setItem("selectedSupplierId", supplierId);
   };
-
-  /* ================= SAVE ================= */
 
   const handleSave = async () => {
     try {
@@ -56,7 +45,6 @@ export default function SourcingSection({ round, onComplete }: any) {
     }
   };
 
-  /* ================= UI ================= */
 
   return (
     <div className="grid grid-cols-1 gap-4 md:gap-8 px-4 md:px-0">
@@ -68,8 +56,6 @@ export default function SourcingSection({ round, onComplete }: any) {
             {error}
           </div>
         )}
-
-        {/* ================= SUPPLIERS ================= */}
 
         <Section title="Choose Supplier (Select One)">
      {suppliers.map((s) => {
@@ -87,8 +73,7 @@ export default function SourcingSection({ round, onComplete }: any) {
         }
       `}
     >
-      <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-        {/* LEFT: LOGO + NAME */}
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">  
         <div className="flex flex-row md:flex-col items-center gap-3 md:gap-0 md:w-44 md:shrink-0 w-full">
           <input
             type="radio"
@@ -111,8 +96,6 @@ export default function SourcingSection({ round, onComplete }: any) {
             <span className="md:hidden text-xs px-2 py-1 rounded-full bg-emerald-600 text-white">✓</span>
           )}
         </div>
-
-        {/* RIGHT: DETAILS TABLE */}
         <div className="flex-1 space-y-2 md:space-y-3 text-xs md:text-sm w-full">
           <DetailRow
             label="Costs for distribution"
@@ -157,8 +140,6 @@ export default function SourcingSection({ round, onComplete }: any) {
     </div>
   );
 }
-
-/* ================= REUSABLE ================= */
 
 function Section({ title, children }: any) {
   return (
