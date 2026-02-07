@@ -18,8 +18,6 @@ export default function QualitySelector({
   config
 }: any) {
   const maxBaseQuality = config?.maxBaseQuality ?? 5;
-
-  /* ================= QUALITY LEVELS ================= */
   const qualityLevels = useMemo(() => {
     if (!config?.qualityMultipliers) return [];
     return Object.keys(config.qualityMultipliers)
@@ -34,8 +32,6 @@ export default function QualitySelector({
       })
       .sort((a, b) => a.level - b.level);
   }, [config, maxBaseQuality]);
-
-  /* ================= SAFETY GUARDS ================= */
   if (!config || !config.qualityMultipliers) {
     return <div className="text-sm text-gray-500">Loading quality levels…</div>;
   }
