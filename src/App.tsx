@@ -21,8 +21,6 @@ function App() {
     finished: false,
   });
   const [isLoading, setIsLoading] = useState(true);
-
-  // Load game state from localStorage on mount
   useEffect(() => {
     const savedGameState = localStorage.getItem('gameState');
     if (savedGameState) {
@@ -35,8 +33,6 @@ function App() {
     }
     setIsLoading(false);
   }, []);
-
-  // Save game state to localStorage whenever it changes
   useEffect(() => {
     if (!isLoading) {
       localStorage.setItem('gameState', JSON.stringify(gameState));
