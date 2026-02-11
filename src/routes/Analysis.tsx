@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import TopNav from "../components/TopNav";
+import { ChevronRight } from "lucide-react";
+import RoundsStrip from "../components/RoundStrip";
+import { HelpCircle, Trophy } from "lucide-react";
+
 
 // ---------------- TYPES ----------------
 
@@ -54,6 +58,7 @@ export default function AnalysisPage() {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [activeSegment, setActiveSegment] = useState<Segment | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   // ---------------- LOAD CATEGORIES ----------------
   useEffect(() => {
@@ -97,97 +102,142 @@ export default function AnalysisPage() {
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto py-4">
         <TopNav />
-      </div>
+         {/* ROUNDS HEADER (added) */}
+        <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm px-4 py-4">
+          <div className="max-w-7xl mx-auto flex items-start justify-between gap-6">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold text-slate-900">Round 1 of 8</h2>
+              <p className="text-sm text-slate-600 mt-1">
+                Foundation: Fruits, dairy, cooking staples, snacks, beverages
+              </p>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 flex gap-6">
-      // ...existing code...
-        {/* LEFT SIDEBAR */}
-        <div className="w-72 bg-white border rounded-2xl p-4 space-y-4 sticky top-6 self-start shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm flex items-center gap-2">
-              <span className="text-slate-400">📂</span>
-              CATEGORIES
-            </h3>
-            <button
-              onClick={() => {
-                // keep existing behavior - quick access to selections
-                const raw = localStorage.getItem(SELECTION_KEY);
-                if (!raw) return;
-                const selections = JSON.parse(raw);
-                const ids = Object.keys(selections).length;
-                alert(`${ids} categories selected`);
-              }}
-              className="text-xs text-slate-500 hover:text-slate-700"
-              title="Manage selections"
-            >
-              Manage
-            </button>
-          </div>
-
-          <div className="relative">
-            <input
-              type="search"
-              placeholder="Search categories..."
-              className="w-full text-sm px-3 py-2 rounded-lg border bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-300"
-              onChange={(e) => {
-                const q = e.target.value.toLowerCase();
-                // simple client side filter
-                setCategories((prev) =>
-                  prev.map((c) => c).filter((c) => c.name.toLowerCase().includes(q))
-                );
-              }}
-            />
-          </div>
-
-          <div className="max-h-56 overflow-auto pr-2 space-y-2">
-            {categories.length === 0 && <div className="text-xs text-slate-400">No categories selected</div>}
-            {categories.map((cat) => (
-              <button
-                key={cat._id}
-                onClick={() => {
-                  setActiveCategory(cat);
-                  setActiveSegment(null);
-                  navigate(`/analysis/category/${cat._id}`);
-                }}
-                className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-3 transition 
-                  ${activeCategory?._id === cat._id ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow" : "hover:bg-slate-100"}`}
-              >
-                <span className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${activeCategory?._id === cat._id ? 'bg-white/20' : 'bg-slate-100'}`}>
-                  🏷️
-                </span>
-                <span className="truncate">{cat.name}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="border-t pt-3">
-            <h4 className="text-xs font-bold mb-2 flex items-center gap-2">
-              <span className="text-slate-400">🎯</span> SEGMENTS
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {SEGMENTS.map((seg) => (
-                <button
-                  key={seg}
-                  disabled={!activeCategory}
-                  onClick={() => {
-                    setActiveSegment(seg);
-                    navigate(`/analysis/category/${activeCategory?._id}/${seg}`);
-                  }}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition
-                    ${activeSegment === seg ? "bg-emerald-600 text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}
-                    ${!activeCategory ? "opacity-60 cursor-not-allowed" : ""}`}
-                >
-                  <span className="capitalize">{seg}</span>
-                </button>
-              ))}
+              <div className="mt-3">
+                <RoundsStrip currentRound={1} maxRounds={8} />
+              </div>
             </div>
 
-            <div className="mt-3 text-xs text-slate-500">
-              Tip: choose a category first to enable segments.
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {}}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-md transition"
+              >
+                <HelpCircle className="w-5 h-5" />
+                <span className="hidden sm:inline">Game Guide</span>
+              </button>
+
+              <div className="flex items-center gap-2 text-sm">
+                <Trophy className="w-5 h-5 text-amber-500" />
+                <span className="font-semibold text-slate-900">0 pts</span>
+              </div>
             </div>
           </div>
         </div>
-// ...existing code...
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-6 flex gap-6">
+        {/* LEFT SIDEBAR */}
+<div className="w-72 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+
+  <h3 className="px-2 mb-4 text-lg font-bold tracking-wider text-black">
+    CATEGORIES
+  </h3>
+
+  <div className="space-y-1">
+
+    {categories.map((cat) => {
+      const isActive = activeCategory?._id === cat._id;
+      const isExpanded = expandedCategory === cat._id;
+
+      return (
+        <div key={cat._id} className="rounded-xl">
+
+          {/* CATEGORY ROW */}
+          <div
+            className={`relative flex items-center justify-between rounded-xl group transition-all duration-200
+            ${isActive
+              ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-sm"
+              : "text-slate-700 hover:bg-slate-100"
+            }`}
+          >
+
+            {/* LEFT ACTIVE BAR */}
+            <span
+              className={`absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full transition-all
+              ${isActive ? "bg-white" : "bg-transparent group-hover:bg-slate-300"}`}
+            />
+
+            {/* NAME BUTTON */}
+            <button
+              onClick={() => {
+                setActiveCategory(cat);
+                setActiveSegment(null);
+                navigate(`/analysis/category/${cat._id}`);
+              }}
+              className="flex items-center gap-3 flex-1 px-3 py-2.5 text-left"
+            >
+              <span className={`w-2 h-2 rounded-full ${isActive ? "bg-white" : "bg-slate-400"}`} />
+              <span className="text-sm font-medium tracking-wide">
+                {cat.name}
+              </span>
+            </button>
+
+            {/* CHEVRON */}
+            <button
+              onClick={() =>
+                setExpandedCategory(isExpanded ? null : cat._id)
+              }
+              className="px-3 py-2"
+            >
+              <ChevronRight
+                size={18}
+                className={`transition-transform duration-300
+                ${isExpanded ? "rotate-90" : "rotate-0"}
+                ${isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700"}`}
+              />
+            </button>
+          </div>
+
+          {/* SEGMENT PANEL */}
+          <div
+            className={`grid transition-all duration-300 ease-in-out
+            ${isExpanded ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0"}`}
+          >
+            <div className="overflow-hidden">
+              <div className="ml-7 flex flex-wrap gap-2 pb-2">
+
+                {SEGMENTS.map((seg) => {
+                  const active =
+                    activeSegment === seg && activeCategory?._id === cat._id;
+
+                  return (
+                    <button
+                      key={seg}
+                      onClick={() => {
+                        setActiveCategory(cat);
+                        setActiveSegment(seg);
+                        navigate(`/analysis/category/${cat._id}/${seg}`);
+                      }}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200
+                      ${active
+                        ? "bg-emerald-500 text-white shadow-sm scale-105"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:scale-105"
+                      }`}
+                    >
+                      {seg}
+                    </button>
+                  );
+                })}
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      );
+    })}
+
+  </div>
+</div>
 
         {/* MAIN CONTENT */}
         <div className="flex-1 space-y-6">
