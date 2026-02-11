@@ -8,7 +8,8 @@ interface RoundsStripProps {
 
 export default function RoundsStrip({ currentRound, maxRounds }: RoundsStripProps) {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-2">
+    
+    <div className="flex items-center gap-2 overflow-x-auto pb-2 ">
       {Array.from({ length: maxRounds }, (_, i) => i + 1).map((round) => (
         <div
           key={round}

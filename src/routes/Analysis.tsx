@@ -100,7 +100,7 @@ export default function AnalysisPage() {
   }, [activeCategory, activeSegment]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 ">
       <div className="max-w-7xl mx-auto py-4">
         <TopNav />
          {/* ROUNDS HEADER (added) */}
@@ -172,6 +172,7 @@ export default function AnalysisPage() {
               onClick={() => {
                 setActiveCategory(cat);
                 setActiveSegment(null);
+                setExpandedCategory(cat._id);
                 navigate(`/analysis/category/${cat._id}`);
               }}
               className="flex items-center gap-3 flex-1 px-3 py-2.5 text-left"
@@ -253,7 +254,7 @@ export default function AnalysisPage() {
               />
             ) : (
               <div>Select category & segment</div>
-            )
+            ) 
           )}
 
           {analysisData && (
