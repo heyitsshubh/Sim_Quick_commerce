@@ -7,6 +7,7 @@ import TopNav from "../components/TopNav";
 import { ChevronRight } from "lucide-react";
 import RoundsStrip from "../components/RoundStrip";
 import { HelpCircle, Trophy } from "lucide-react";
+import CategorySummary from "../components/CategorySummary";
 
 
 // ---------------- TYPES ----------------
@@ -240,8 +241,20 @@ export default function AnalysisPage() {
 </div>
 
         {/* MAIN CONTENT */}
-        <div className="flex-1 space-y-6">
-          {!analysisData && <div>Select category & segment</div>}
+            <div className="flex-1 space-y-6">
+-                   {!analysisData && (
+            activeCategory ? (
+              <CategorySummary
+                category={activeCategory}
+                onSegmentClick={(seg: Segment) => {
+                  setActiveSegment(seg);
+                  navigate(`/analysis/category/${activeCategory._id}/${seg}`);
+                }}
+              />
+            ) : (
+              <div>Select category & segment</div>
+            )
+          )}
 
           {analysisData && (
             <>
