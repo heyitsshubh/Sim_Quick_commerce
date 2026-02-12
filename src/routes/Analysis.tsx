@@ -137,109 +137,77 @@ export default function AnalysisPage() {
 
       <div className="max-w-7xl mx-auto px-6 py-6 flex gap-6">
         {/* LEFT SIDEBAR */}
-<div className="w-72 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div className="w-72">
+          <div className="bg-white rounded-xl shadow-lg p-4 sticky top-4">
+            <div className="mb-4">
+              <h3 className="font-bold text-black text-lg">Categories</h3>
+              <p className="text-xs text-slate-600 mt-1">Select category & segment to analyze</p>
+            </div>
 
-  <h3 className="px-2 mb-4 text-lg font-bold tracking-wider text-black">
-    CATEGORIES
-  </h3>
+            <div className="space-y-2">
+              {categories.map((cat) => {
+                const isActive = activeCategory?._id === cat._id;
+                const isExpanded = expandedCategory === cat._id;
 
-  <div className="space-y-1">
-
-    {categories.map((cat) => {
-      const isActive = activeCategory?._id === cat._id;
-      const isExpanded = expandedCategory === cat._id;
-
-      return (
-        <div key={cat._id} className="rounded-xl">
-
-          {/* CATEGORY ROW */}
-          <div
-            className={`relative flex items-center justify-between rounded-xl group transition-all duration-200
-            ${isActive
-              ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-sm"
-              : "text-slate-700 hover:bg-slate-100"
-            }`}
-          >
-
-            {/* LEFT ACTIVE BAR */}
-            <span
-              className={`absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full transition-all
-              ${isActive ? "bg-white" : "bg-transparent group-hover:bg-slate-300"}`}
-            />
-
-            {/* NAME BUTTON */}
-            <button
-              onClick={() => {
-                setActiveCategory(cat);
-                setActiveSegment(null);
-                setExpandedCategory(cat._id);
-                navigate(`/analysis/category/${cat._id}`);
-              }}
-              className="flex items-center gap-3 flex-1 px-3 py-2.5 text-left"
-            >
-              <span className={`w-2 h-2 rounded-full ${isActive ? "bg-white" : "bg-slate-400"}`} />
-              <span className="text-sm font-medium tracking-wide">
-                {cat.name}
-              </span>
-            </button>
-
-            {/* CHEVRON */}
-            <button
-              onClick={() =>
-                setExpandedCategory(isExpanded ? null : cat._id)
-              }
-              className="px-3 py-2"
-            >
-              <ChevronRight
-                size={18}
-                className={`transition-transform duration-300
-                ${isExpanded ? "rotate-90" : "rotate-0"}
-                ${isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700"}`}
-              />
-            </button>
-          </div>
-
-          {/* SEGMENT PANEL */}
-          <div
-            className={`grid transition-all duration-300 ease-in-out
-            ${isExpanded ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0"}`}
-          >
-            <div className="overflow-hidden">
-              <div className="ml-7 flex flex-wrap gap-2 pb-2">
-
-                {SEGMENTS.map((seg) => {
-                  const active =
-                    activeSegment === seg && activeCategory?._id === cat._id;
-
-                  return (
+                return (
+                  <div key={cat._id}>
+                    {/* CATEGORY ROW */}
                     <button
-                      key={seg}
                       onClick={() => {
                         setActiveCategory(cat);
-                        setActiveSegment(seg);
-                        navigate(`/analysis/category/${cat._id}/${seg}`);
+                        setActiveSegment(null);
+                        setExpandedCategory(isExpanded ? null : cat._id);
+                        navigate(`/analysis/category/${cat._id}`);
                       }}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200
-                      ${active
-                        ? "bg-emerald-500 text-white shadow-sm scale-105"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:scale-105"
+                      className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-left transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                       }`}
                     >
-                      {seg}
+                      <span className="text-sm font-medium">{cat.name}</span>
+                      <ChevronRight
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isExpanded ? 'rotate-90' : 'rotate-0'
+                        }`}
+                      />
                     </button>
-                  );
-                })}
 
-              </div>
+                    {/* SEGMENT PANEL */}
+                    {isExpanded && (
+                      <div className="mt-2 ml-3 space-y-1">
+                        {SEGMENTS.map((seg) => {
+                          const segmentActive = activeSegment === seg && activeCategory?._id === cat._id;
+
+                          return (
+                            <button
+                              key={seg}
+                              onClick={() => {
+                                setActiveCategory(cat);
+                                setActiveSegment(seg);
+                                navigate(`/analysis/category/${cat._id}/${seg}`);
+                              }}
+                              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-all ${
+                                segmentActive
+                                  ? 'bg-green-100 text-green-700 font-medium'
+                                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                              }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${
+                                segmentActive ? 'bg-green-600' : 'bg-slate-400'
+                              }`} />
+                              {seg.charAt(0).toUpperCase() + seg.slice(1)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-
         </div>
-      );
-    })}
-
-  </div>
-</div>
 
         {/* MAIN CONTENT */}
             <div className="flex-1 space-y-6">
