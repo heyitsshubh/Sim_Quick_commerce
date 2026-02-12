@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Trophy, Lock, Unlock, HelpCircle } from 'lucide-react';
+import { Trophy, HelpCircle } from 'lucide-react';
 import type { GameState } from '../types/game';
 import { ROUND_UNLOCKS } from '../data/categories';
 import DecisionPanel from './DecisionPanel';
 import Leaderboard from './Leaderboard';
 import GameGuide from './GameGuide';
 import TopNav from './TopNav';
+import RoundsStrip from './RoundStrip';
 
 interface GameBoardProps {
   gameState: GameState;
@@ -63,36 +64,38 @@ export default function GameBoard({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-slate-50">
       {showGuide && <GameGuide onClose={() => setShowGuide(false)} />}
 
-      {/* HEADER */}
-      <div className="border-b border-slate-200 bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-
-          <TopNav />
-
-          {/* ROUND HEADER */}
-          <div className="flex items-center justify-between mt-4 mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+      <div className="max-w-7xl mx-auto py-4">
+        <TopNav />
+        
+        {/* ROUNDS HEADER */}
+        <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm px-4 py-4">
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold text-slate-900">
                 Round {gameState.currentRound} of {gameState.maxRounds}
-              </h1>
-              <p className="text-slate-600">
+              </h2>
+              <p className="text-sm text-slate-600 mt-1">
                 {roundInfo?.title}: {roundInfo?.description}
               </p>
+
+              <div className="mt-3">
+                <RoundsStrip currentRound={gameState.currentRound} maxRounds={gameState.maxRounds} />
+              </div>
             </div>
 
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setShowGuide(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded-lg transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-md transition"
               >
                 <HelpCircle className="w-5 h-5" />
                 <span className="hidden sm:inline">Game Guide</span>
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-sm">
                 <Trophy className="w-5 h-5 text-amber-500" />
                 <span className="font-semibold text-slate-900">
                   {currentPlayer.score} pts
@@ -100,46 +103,14 @@ export default function GameBoard({
               </div>
             </div>
           </div>
-
-          {/* 🔁 ROUNDS STRIP */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2">
-            {Array.from({ length: gameState.maxRounds }, (_, i) => i + 1).map(
-              (round) => (
-                <div
-                  key={round}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${
-                    round === gameState.currentRound
-                      ? 'bg-blue-600 text-white'
-                      : round < gameState.currentRound
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-slate-100 text-slate-400'
-                  }`}
-                >
-                  {round <= gameState.currentRound ? (
-                    <Unlock className="w-4 h-4" />
-                  ) : (
-                    <Lock className="w-4 h-4" />
-                  )}
-                  Round {round}
-                </div>
-              )
-            )}
-          </div>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        {/* <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 mb-1">
-                {currentPlayer.name} - {currentPlayer.company}
-              </h2>
-              <p className="text-sm text-slate-600">
-                Player {activePlayer + 1} of {gameState.players.length}
-              </p>
-            </div>
+            
 
             <div className="flex gap-2">
               {gameState.players.map((_, i) => (
@@ -156,7 +127,7 @@ export default function GameBoard({
               ))}
             </div>
           </div>
-        </div>
+        </div> */}
 
         <DecisionPanel
           player={currentPlayer}
