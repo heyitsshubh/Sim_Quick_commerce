@@ -108,26 +108,6 @@ export default function GameBoard({
 
       {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between">
-            
-
-            <div className="flex gap-2">
-              {gameState.players.map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-3 h-3 rounded-full ${
-                    i === activePlayer
-                      ? 'bg-blue-600'
-                      : i < activePlayer
-                      ? 'bg-green-500'
-                      : 'bg-slate-300'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div> */}
 
         <DecisionPanel
           player={currentPlayer}
