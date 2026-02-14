@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import TopNav from "../components/TopNav";
 import RoundsStrip from "../components/RoundStrip";
 import {
@@ -8,90 +8,6 @@ import {
   Check,
   Save,
 } from "lucide-react";
-import axios from "axios";
-
-const API = "https://sim-quick-commerce-backend.onrender.com/api/business-plan";
-
-const mapTabToSection = (tab: string) =>
-  tab.toLowerCase().replace(" ", "-");
-
-const normalizeTargetSections = (raw: any): Record<string, TargetSection> | null => {
-  if (!raw) return null;
-  if (Array.isArray(raw)) {
-    const entries = raw
-      .filter((section) => section && Array.isArray(section.targets))
-      .map((section, idx) => {
-        const key = section.id || section.title || `section_${idx + 1}`;
-        return [key, {
-          title: section.title || "",
-          description: section.description || "",
-          targets: section.targets || [],
-        }] as [string, TargetSection];
-      });
-    return entries.length > 0 ? Object.fromEntries(entries) : null;
-  }
-  if (typeof raw === "object") {
-    return raw as Record<string, TargetSection>;
-  }
-  return null;
-};
-
-const buildTargetsFromFinancial = (financial: Record<string, number>): Record<string, TargetSection> => {
-  const targets: Target[] = Object.entries(financial).map(([key, value]) => {
-    const normalizedKey = key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
-    const isPercent = /margin|growth|rate|percentage|percent/i.test(key);
-    const unit = isPercent ? "%" : "";
-    const min = 0;
-    const max = isPercent ? 100 : Math.max(1000, Math.ceil(value * 2));
-    const step = isPercent ? 1 : Math.max(1, Math.ceil(max / 20));
-    return {
-      id: key,
-      title: normalizedKey,
-      desc: "Set your target value.",
-      min,
-      max,
-      step,
-      unit,
-      defaultVal: typeof value === "number" ? value : min,
-    };
-  });
-
-  return {
-    financial: {
-      title: "Financial Targets",
-      description: "Adjust the key financial targets for your plan.",
-      targets,
-    },
-  };
-};
-
-const toTitle = (key: string) =>
-  key
-    .replace(/_/g, " ")
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (c) => c.toUpperCase())
-    .replace(/\s+/g, " ")
-    .trim();
-
-const normalizeRevenueStreams = (raw: any): RevenueStream[] | null => {
-  if (!raw) return null;
-  if (Array.isArray(raw)) {
-    return raw as RevenueStream[];
-  }
-  if (typeof raw === "object") {
-    const entries = Object.keys(raw);
-    if (entries.length === 0) return null;
-    return entries.map((id) => ({
-      id,
-      label: toTitle(id),
-      desc: "",
-      icon: "💰",
-    }));
-  }
-  return null;
-};
-
-
 
 // ─── TYPES ───────────────────────────────────────────────
 type SubTab =
@@ -181,17 +97,151 @@ const SUB_TABS: SubTab[] = [
   "Moat Builder",
 ];
 
-// Data will be loaded from API
+const COMPETITIVE_OPTIONS: CompetitiveOption[] = [
+  {
+    id: "cost",
+    title: "Cost Leadership",
+    desc: "Compete on price — optimize unit economics, negotiate aggressive supplier deals, run lean dark stores. Aim to be the cheapest option in every delivery zone.",
+  },
+  {
+    id: "speed",
+    title: "Speed & Convenience Leadership",
+    desc: "Win on delivery speed and reliability. Invest heavily in dark store density, rider fleet, and route optimization. Be the fastest in every pin code you operate in.",
+  },
+  {
+    id: "selection",
+    title: "Selection & Quality Leadership",
+    desc: "Differentiate through the widest product catalog, premium sourcing, and curated private labels. Attract customers who value variety and quality over price.",
+  },
+  {
+    id: "experience",
+    title: "Customer Experience Focus",
+    desc: "Build the strongest brand loyalty through exceptional app UX, personalized recommendations, proactive support, and a subscription-first model.",
+  },
+  {
+    id: "balanced",
+    title: "Balanced Approach",
+    desc: "No single extreme — aim for a competitive position across price, speed, selection, and experience. Lower risk but harder to stand out.",
+  },
+];
 
-// Data will be loaded from API
+const SWOT_INIT: SwotData = {
+  strengths: [
+    "Fresh supply chain with direct farm-to-store sourcing",
+    "AI-powered demand forecasting reducing waste by 30%",
+    "Lean dark store model enabling rapid city expansion",
+    "Strong technology team with deep logistics expertise",
+  ],
+  weaknesses: [
+    "Limited brand recognition as a new entrant",
+    "High cash burn during initial city launches",
+    "Dependence on gig-economy riders for last-mile delivery",
+    "Narrow product catalog compared to established players",
+  ],
+  opportunities: [
+    "Growing consumer shift to instant delivery for daily essentials",
+    "Tier-2 city expansion where competition is limited",
+    "Private label margins 2-3× higher than branded products",
+    "Government push for digital commerce and UPI adoption",
+  ],
+  threats: [
+    "Aggressive pricing wars from well-funded competitors",
+    "Rising dark store rental costs in metro cities",
+    "Regulatory changes around gig worker classification",
+    "Supply chain disruptions from weather or logistics bottlenecks",
+  ],
+};
 
-// Data will be loaded from API
+const VISION_VALUES: VisionValue[] = [
+  "10-Minute Essentials for Every Indian",
+  "Empowering Local Kiranas Through Tech",
+  "Zero-Waste Supply Chain",
+  "Affordable Quality for All",
+  "Hyperlocal Community Commerce",
+  "India's Most Trusted Delivery Brand",
+  "Sustainable Last-Mile Logistics",
+  "AI-First Operations",
+  "Rider Welfare & Fair Gig Economy",
+  "Fresh From Farm to Doorstep",
+  "Premium Experience at Mass Prices",
+  "Carbon-Neutral Deliveries by 2030",
+  "Category-Defining Private Labels",
+  "Data-Driven Personalization",
+];
 
-// Data will be loaded from API
+const ANSOFF_CELLS: AnsoffCell[] = [
+  {
+    id: "product_dev",
+    title: "Product Development",
+    desc: "Launch new categories (pharmacy, electronics, beauty) and private labels in your current operating cities.",
+  },
+  {
+    id: "diversification",
+    title: "Diversification",
+    desc: "Launch entirely new offerings (B2B supply, subscription boxes, white-label logistics) in new markets. High risk, high reward.",
+  },
+  {
+    id: "penetration",
+    title: "Market Penetration",
+    desc: "Increase market share in current cities with current categories. Win customers through better pricing, faster delivery, or superior experience.",
+  },
+  {
+    id: "market_dev",
+    title: "Market Development",
+    desc: "Take your proven grocery and essentials catalog into new Tier-2 and Tier-3 cities. Replicate what works in new geographies.",
+  },
+];
 
-// Data will be loaded from API
+const TARGET_SECTIONS: Record<string, TargetSection> = {
+  financial: {
+    title: "Financial",
+    description:
+      "Drive profitability and sustainable growth. Ambitious targets earn more ranking points.",
+    targets: [
+      { id: "net_profit", title: "Net Profit Margin", desc: "Profit after all expenses as a % of revenue.", min: 0, max: 25, step: 1, unit: "%", defaultVal: 8 },
+      { id: "revenue_growth", title: "Revenue Growth Rate", desc: "Year-over-year revenue growth.", min: 10, max: 200, step: 5, unit: "%", defaultVal: 50 },
+      { id: "unit_economics", title: "Positive Unit Economics", desc: "Contribution margin per order.", min: 0, max: 50, step: 1, unit: "₹", defaultVal: 15 },
+      { id: "aov", title: "Average Order Value", desc: "Target AOV across all categories.", min: 100, max: 1000, step: 10, unit: "₹", defaultVal: 400 },
+    ],
+  },
+  customer: {
+    title: "Customer",
+    description: "Focus on market position, satisfaction, and retention.",
+    targets: [
+      { id: "market_share", title: "Market Share", desc: "Share of quick commerce orders in operating cities.", min: 1, max: 40, step: 1, unit: "%", defaultVal: 12 },
+      { id: "nps", title: "Net Promoter Score", desc: "Customer satisfaction score.", min: 10, max: 80, step: 5, unit: "", defaultVal: 45 },
+      { id: "retention", title: "Monthly Retention Rate", desc: "Customers who reorder within 30 days.", min: 20, max: 80, step: 5, unit: "%", defaultVal: 55 },
+      { id: "delivery_time", title: "Avg Delivery Time", desc: "Target average delivery time.", min: 8, max: 30, step: 1, unit: "min", defaultVal: 14 },
+    ],
+  },
+  operations: {
+    title: "Operations",
+    description: "Ensure efficiency and scalability.",
+    targets: [
+      { id: "fill_rate", title: "Order Fill Rate", desc: "Orders fulfilled without substitution.", min: 80, max: 100, step: 1, unit: "%", defaultVal: 95 },
+      { id: "wastage", title: "Perishable Wastage Rate", desc: "% of perishable inventory wasted.", min: 0, max: 15, step: 1, unit: "%", defaultVal: 5 },
+    ],
+  },
+  growth: {
+    title: "Learn & Growth",
+    description: "Build long-term advantage through talent and innovation.",
+    targets: [
+      { id: "rider_retention", title: "Rider Retention Rate", desc: "Riders retained month-over-month.", min: 40, max: 95, step: 5, unit: "%", defaultVal: 70 },
+      { id: "tech_adoption", title: "Tech Feature Adoption", desc: "Orders using AI recommendations.", min: 5, max: 60, step: 5, unit: "%", defaultVal: 25 },
+    ],
+  },
+};
 
-// Data will be loaded from API
+const REVENUE_STREAMS: RevenueStream[] = [
+  { id: "delivery_fee", label: "Delivery Fee", desc: "Charge per order for delivery service", icon: "🚚" },
+  { id: "product_margin", label: "Product Margins", desc: "Mark-up on goods sold through your platform", icon: "📦" },
+  { id: "private_label", label: "Private Label Sales", desc: "Higher-margin in-house branded products", icon: "🏷️" },
+  { id: "subscription", label: "Subscription / Membership", desc: "Monthly fee for free delivery & perks", icon: "💳" },
+  { id: "advertising", label: "In-App Advertising", desc: "Brands pay for promoted placement in search & categories", icon: "📢" },
+  { id: "data_insights", label: "Data & Insights", desc: "Sell anonymized consumer trend data to FMCG brands", icon: "📊" },
+  { id: "dark_store_rental", label: "Dark Store as a Service", desc: "Rent excess dark store capacity to other businesses", icon: "🏪" },
+  { id: "logistics_api", label: "Last-Mile Logistics API", desc: "Offer your delivery fleet as a service to D2C brands", icon: "🔌" },
+];
 
 const PRIORITY_STYLES: Record<RevenuePriority, { label: string; cls: string }> = {
   primary: { label: "Primary", cls: "bg-blue-100 text-blue-700 border-blue-300" },
@@ -200,9 +250,27 @@ const PRIORITY_STYLES: Record<RevenuePriority, { label: string; cls: string }> =
   not_planned: { label: "Not Planned", cls: "bg-slate-100 text-slate-500 border-slate-200" },
 };
 
-// Data will be loaded from API
+const RISKS: Risk[] = [
+  { id: "funding", label: "Funding Crunch", desc: "Unable to raise next round; forced to cut burn", likelihood: 3, impact: 5 },
+  { id: "price_war", label: "Price War Escalation", desc: "Competitors slash prices below cost for sustained period", likelihood: 4, impact: 4 },
+  { id: "regulation", label: "Regulatory Disruption", desc: "New gig worker laws or FSSAI rules increase compliance cost", likelihood: 3, impact: 3 },
+  { id: "supply_chain", label: "Supply Chain Failure", desc: "Key supplier defaults or perishable cold chain breaks", likelihood: 2, impact: 4 },
+  { id: "tech_outage", label: "Platform Outage", desc: "App or backend goes down during peak hours", likelihood: 2, impact: 5 },
+  { id: "rider_churn", label: "Mass Rider Attrition", desc: "Competitors poach riders with higher incentives", likelihood: 4, impact: 3 },
+  { id: "demand_shift", label: "Consumer Behaviour Shift", desc: "Users shift back to offline or a new model emerges", likelihood: 2, impact: 3 },
+  { id: "data_breach", label: "Data / Security Breach", desc: "Customer data leak damages brand trust", likelihood: 1, impact: 5 },
+];
 
-// Data will be loaded from API
+const MOAT_OPTIONS: MoatOption[] = [
+  { id: "network_density", label: "Dark Store Density", desc: "More stores = faster delivery = more orders = revenue to fund more stores.", category: "Network Effects", effort: 5, impact: 5 },
+  { id: "rider_loyalty", label: "Rider Loyalty Program", desc: "Guaranteed hours, insurance, upskilling. Happy riders = reliable delivery.", category: "Switching Costs", effort: 3, impact: 3 },
+  { id: "private_labels", label: "Private Label Portfolio", desc: "Exclusive brands customers can't get elsewhere. Higher margins and lock-in.", category: "Brand", effort: 4, impact: 4 },
+  { id: "ai_personalization", label: "AI Personalization Engine", desc: "Recommendation system that gets smarter with each order.", category: "Data Advantage", effort: 4, impact: 4 },
+  { id: "subscription_base", label: "Subscription User Base", desc: "Recurring revenue + predictable demand. Subscribers order 3× more.", category: "Switching Costs", effort: 3, impact: 5 },
+  { id: "supplier_exclusives", label: "Exclusive Supplier Contracts", desc: "Lock in best-quality or lowest-cost supply competitors can't access.", category: "Cost Advantage", effort: 4, impact: 3 },
+  { id: "hyperlocal_data", label: "Hyperlocal Demand Intelligence", desc: "Pin-code level prediction. Reduces waste, optimizes inventory.", category: "Data Advantage", effort: 5, impact: 4 },
+  { id: "community_trust", label: "Community & Trust Brand", desc: "Local ambassadors, farmer stories, transparent sourcing.", category: "Brand", effort: 2, impact: 3 },
+];
 
 // ─── REUSABLE COMPONENTS ─────────────────────────────────
 
@@ -260,16 +328,6 @@ function NoteArea({
 export default function BusinessPlan() {
   const [activeTab, setActiveTab] = useState<SubTab>("Competitive");
 
-  // API Data States
-  const [competitiveOptions, setCompetitiveOptions] = useState<CompetitiveOption[]>([]);
-  const [swotData, setSwotData] = useState<SwotData>({ strengths: [], weaknesses: [], opportunities: [], threats: [] });
-  const [visionValues, setVisionValues] = useState<VisionValue[]>([]);
-  const [ansoffCells, setAnsoffCells] = useState<AnsoffCell[]>([]);
-  const [targetSections, setTargetSections] = useState<Record<string, TargetSection>>({});
-  const [revenueStreams, setRevenueStreams] = useState<RevenueStream[]>([]);
-  const [risks, setRisks] = useState<Risk[]>([]);
-  const [moatOptions, setMoatOptions] = useState<MoatOption[]>([]);
-
   // Competitive
   const [selectedStrategy, setSelectedStrategy] = useState("speed");
   const [competitiveNote, setCompetitiveNote] = useState("");
@@ -278,7 +336,9 @@ export default function BusinessPlan() {
   const [swotNote, setSwotNote] = useState("");
 
   // Vision
-  const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
+  const [selectedValues, setSelectedValues] = useState<Set<string>>(
+    new Set(["10-Minute Essentials for Every Indian", "Zero-Waste Supply Chain", "AI-First Operations"])
+  );
   const [missionStatement, setMissionStatement] = useState("");
 
   // Growth
@@ -286,343 +346,34 @@ export default function BusinessPlan() {
   const [growthNote, setGrowthNote] = useState("");
 
   // Targets
-  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());
+  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(
+    new Set(["net_profit", "market_share", "nps", "fill_rate", "rider_retention"])
+  );
   const [targetValues, setTargetValues] = useState<Record<string, number>>({});
-  const [kpiTargets, setKpiTargets] = useState<Set<string>>(new Set());
+  const [kpiTargets, setKpiTargets] = useState<Set<string>>(new Set(["market_share"]));
 
   // Revenue Model
-  const [revenuePriorities, setRevenuePriorities] = useState<Record<string, RevenuePriority>>({});
+  const [revenuePriorities, setRevenuePriorities] = useState<Record<string, RevenuePriority>>({
+    delivery_fee: "primary",
+    product_margin: "primary",
+    private_label: "secondary",
+    subscription: "experimental",
+  });
   const [revenueNote, setRevenueNote] = useState("");
 
   // Risk Matrix
   const [riskMitigations, setRiskMitigations] = useState<Record<string, string>>({});
-  const [topRisks, setTopRisks] = useState<Set<string>>(new Set());
+  const [topRisks, setTopRisks] = useState<Set<string>>(new Set(["price_war", "rider_churn", "funding"]));
 
   // Moat Builder
-  const [selectedMoats, setSelectedMoats] = useState<Set<string>>(new Set());
+  const [selectedMoats, setSelectedMoats] = useState<Set<string>>(
+    new Set(["network_density", "ai_personalization", "subscription_base"])
+  );
   const [moatNote, setMoatNote] = useState("");
 
   // Save toast
   const [saved, setSaved] = useState(false);
-
-  // ════════ LOAD MASTER DATA FROM API (once on mount) ════════
-  // Disabled: user requested no automatic master-data fetch
-  useEffect(() => {
-    // loadMasterData();
-  }, []);
-
-  const loadMasterData = async () => {
-    try {
-      const res = await axios.get(`${API}/master-data`);
-      const data = res.data;
-      
-      // Map API structure to component state
-      if (data.strategies) {
-        setCompetitiveOptions(data.strategies.map((s: any) => ({
-          id: s.title.toLowerCase().replace(/\s+&\s+/g, '_').replace(/\s+/g, '_'),
-          title: s.title,
-          desc: s.description
-        })));
-      }
-      
-      // Handle SWOT data - check for both direct properties and nested swotData
-      if (data.opportunities || data.threats || data.strengths || data.weaknesses) {
-        setSwotData({
-          opportunities: data.opportunities || [],
-          threats: data.threats || [],
-          strengths: data.strengths || [],
-          weaknesses: data.weaknesses || []
-        });
-      } else if (data.swotData) {
-        setSwotData(data.swotData);
-      }
-      
-      if (data.visionValues && Array.isArray(data.visionValues) && data.visionValues.length > 0) {
-        setVisionValues(data.visionValues);
-      } else if (data.values && Array.isArray(data.values) && data.values.length > 0) {
-        setVisionValues(data.values);
-      } else if (data.options && Array.isArray(data.options) && data.options.length > 0) {
-        setVisionValues(data.options);
-      }
-      
-      if (data.ansoffCells) {
-        setAnsoffCells(data.ansoffCells.map((c: any) => ({
-          id: c.id,
-          title: c.title,
-          desc: c.description || c.desc
-        })));
-      }
-      // ansoffCells set from API above; no defaults injected
-      
-      const normalizedTargets = normalizeTargetSections(
-        data.targetSections || data.sections || data.targets
-      );
-      if (normalizedTargets) {
-        setTargetSections(normalizedTargets);
-      } else if (data.financial && typeof data.financial === "object") {
-        setTargetSections(buildTargetsFromFinancial(data.financial));
-      }
-      
-      const normalizedRevenueStreams = normalizeRevenueStreams(
-        data.revenueStreams || data.revenueModel || data.revenue || data.streams
-      );
-      if (normalizedRevenueStreams) {
-        setRevenueStreams(normalizedRevenueStreams);
-      }
-      
-      if (data.risks) {
-        setRisks(data.risks.map((r: any, idx: number) => ({
-          id: r.id || r.name || `risk_${idx + 1}`,
-          label: r.label || r.name || "",
-          desc: r.description || r.desc || "",
-          likelihood: r.likelihood ?? 3,
-          impact: r.impact ?? 3
-        })));
-      }
-      
-      if (data.moatOptions) {
-        setMoatOptions(data.moatOptions.map((m: any) => ({
-          id: m.id || m.label?.toLowerCase().replace(/\s+/g, "_") || "",
-          label: m.label || m.name || "",
-          desc: m.description || m.desc || "",
-          category: m.category || "Moat",
-          effort: m.effort ?? 3,
-          impact: m.impact ?? 3
-        })));
-      } else if (data.moats) {
-        setMoatOptions(data.moats.map((m: any) => {
-          if (typeof m === "string") {
-            return {
-              id: m.toLowerCase().replace(/\s+/g, "_"),
-              label: m,
-              desc: "",
-              category: "Moat",
-              effort: 3,
-              impact: 3,
-            };
-          }
-          return {
-            id: m.id || m.label?.toLowerCase().replace(/\s+/g, "_") || "",
-            label: m.label || m.name || "",
-            desc: m.description || m.desc || "",
-            category: m.category || "Moat",
-            effort: m.effort ?? 3,
-            impact: m.impact ?? 3,
-          };
-        }));
-      }
-    } catch (e) {
-      console.error("Failed to load master data:", e);
-    }
-  };
-
-  // ════════ LOAD SECTION DATA FROM API ════════
-  useEffect(() => {
-    loadSection();
-  }, [activeTab]);
-
-  const loadSection = async () => {
-    try {
-      const section = mapTabToSection(activeTab);
-      const res = await axios.get(`${API}/${section}`);
-      const data = res.data;
-
-      switch (section) {
-        case "competitive":
-          // Handle both title and ID formats
-          if (data.selectedStrategy) {
-            // If it's a full title, convert to ID
-            const strategyId = data.selectedStrategy.toLowerCase().replace(/\s+&\s+/g, '_').replace(/\s+/g, '_');
-            setSelectedStrategy(strategyId);
-          }
-          setCompetitiveNote(data.elaboration || "");
-          
-          // Also load strategies if provided
-          if (data.strategies) {
-            setCompetitiveOptions(data.strategies.map((s: any) => ({
-              id: s.title.toLowerCase().replace(/\s+&\s+/g, '_').replace(/\s+/g, '_'),
-              title: s.title,
-              desc: s.description
-            })));
-          }
-          break;
-
-        case "swot":
-          setSwotNote(data.note || data.elaboration || "");
-          
-          // Handle both direct properties and nested swotData
-          if (data.opportunities || data.threats || data.strengths || data.weaknesses) {
-            setSwotData({
-              opportunities: data.opportunities || [],
-              threats: data.threats || [],
-              strengths: data.strengths || [],
-              weaknesses: data.weaknesses || []
-            });
-          } else if (data.swotData) {
-            setSwotData(data.swotData);
-          }
-          break;
-
-        case "vision":
-          // Do not prefill selected values or mission; user will choose manually
-          // Load visionValues from response if provided
-          if (data.visionValues && Array.isArray(data.visionValues) && data.visionValues.length > 0) {
-            setVisionValues(data.visionValues);
-          } else if (data.values && Array.isArray(data.values) && data.values.length > 0) {
-            setVisionValues(data.values);
-          } else if (data.options && Array.isArray(data.options) && data.options.length > 0) {
-            setVisionValues(data.options);
-          }
-          break;
-
-        case "growth":
-          if (data.strategy) {
-            setSelectedGrowth(data.strategy);
-          }
-          setGrowthNote(data.note || "");
-          if (data.ansoffCells) {
-            setAnsoffCells(data.ansoffCells);
-          }
-          break;
-
-        case "targets": {
-          // Do not prefill targets/values/KPI; user will choose and slide manually
-          const normalizedTargets = normalizeTargetSections(
-            data.targetSections || data.sections || data.targets
-          );
-          if (normalizedTargets) {
-            setTargetSections(normalizedTargets);
-          } else if (data.financial && typeof data.financial === "object") {
-            setTargetSections(buildTargetsFromFinancial(data.financial));
-          }
-          break;
-        }
-
-        case "revenue-model": {
-          let nextPriorities: Record<string, RevenuePriority> = {};
-          if (data.priorities && typeof data.priorities === "object") {
-            nextPriorities = data.priorities;
-          } else if (data && typeof data === "object") {
-            nextPriorities = data as Record<string, RevenuePriority>;
-          }
-          setRevenuePriorities(nextPriorities);
-          setRevenueNote(data.note || "");
-          const normalizedRevenueStreams = normalizeRevenueStreams(
-            data.revenueStreams || data.revenueModel || data.revenue || data.streams || nextPriorities
-          );
-          if (normalizedRevenueStreams) {
-            setRevenueStreams(normalizedRevenueStreams);
-          }
-          break;
-        }
-
-        case "risk-matrix":
-          setTopRisks(new Set(data.topRisks || []));
-          setRiskMitigations(data.mitigations || {});
-          if (data.risks) {
-            const mappedRisks = data.risks.map((r: any, idx: number) => ({
-              id: r.id || r.name || `risk_${idx + 1}`,
-              label: r.label || r.name || "",
-              desc: r.description || r.desc || "",
-              likelihood: r.likelihood ?? 3,
-              impact: r.impact ?? 3,
-            }));
-            setRisks(mappedRisks);
-
-            const mitigationMap: Record<string, string> = {};
-            data.risks.forEach((r: any, idx: number) => {
-              const id = r.id || r.name || `risk_${idx + 1}`;
-              if (r.mitigation) mitigationMap[id] = r.mitigation;
-            });
-            if (Object.keys(mitigationMap).length > 0) {
-              setRiskMitigations(mitigationMap);
-            }
-          }
-          break;
-
-        case "moat-builder": {
-          // Don't prefill selected moats; user will choose manually
-          setMoatNote(data.note || "");
-          
-          // Handle moat options from various response formats
-          const moatsList = data.moatOptions || data.moats || data.options || data.selectedMoats;
-          if (moatsList && Array.isArray(moatsList)) {
-            setMoatOptions(moatsList.map((m: any) => {
-              // Handle both object format and string format
-              if (typeof m === "string") {
-                return {
-                  id: m.toLowerCase().replace(/\s+/g, "_"),
-                  label: m,
-                  desc: "",
-                  category: "Moat",
-                  effort: 3,
-                  impact: 3,
-                };
-              }
-              return {
-                id: m.id || m.label?.toLowerCase().replace(/\s+/g, "_") || m.name?.toLowerCase().replace(/\s+/g, "_") || "",
-                label: m.label || m.name || m.id || "",
-                desc: m.description || m.desc || "",
-                category: m.category || "Moat",
-                effort: m.effort ?? 3,
-                impact: m.impact ?? 3,
-              };
-            }));
-          }
-          break;
-        }
-      }
-    } catch (e: any) {
-      console.error(`Failed to load section ${activeTab}:`, e);
-      console.error(`API URL was: ${API}/${mapTabToSection(activeTab)}`);
-      console.error(`Error details:`, e.response?.data || e.message);
-    }
-  };
-
-  // ════════ SAVE SECTION DATA TO API ════════
-  const handleSave = async () => {
-    const section = mapTabToSection(activeTab);
-    let payload: any = {};
-
-    switch (section) {
-      case "competitive":
-        payload = { selectedStrategy, elaboration: competitiveNote };
-        break;
-
-      case "swot":
-        payload = { note: swotNote };
-        break;
-
-      case "vision":
-        payload = { selectedValues: Array.from(selectedValues), mission: missionStatement };
-        break;
-
-      case "growth":
-        payload = { strategy: selectedGrowth, note: growthNote };
-        break;
-
-      case "targets":
-        payload = {
-          selectedTargets: Array.from(selectedTargets),
-          targetValues,
-          kpiTargets: Array.from(kpiTargets),
-        };
-        break;
-
-      case "revenue-model":
-        payload = { priorities: revenuePriorities, note: revenueNote };
-        break;
-
-      case "risk-matrix":
-        payload = { topRisks: Array.from(topRisks), mitigations: riskMitigations };
-        break;
-
-      case "moat-builder":
-        payload = { selectedMoats: Array.from(selectedMoats), note: moatNote };
-        break;
-    }
-
-    await axios.post(`${API}/${section}`, { data: payload });
+  const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -759,7 +510,7 @@ export default function BusinessPlan() {
               </p>
 
               <div className="space-y-3">
-                {competitiveOptions.map((opt) => (
+                {COMPETITIVE_OPTIONS.map((opt) => (
                   <label
                     key={opt.id}
                     className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
@@ -839,7 +590,7 @@ export default function BusinessPlan() {
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                   <h4 className="text-sm font-bold text-emerald-800 mb-3 uppercase tracking-wider">Opportunities</h4>
                   <ul className="space-y-2">
-                    {swotData.opportunities.map((item, i) => (
+                    {SWOT_INIT.opportunities.map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 shrink-0" />
                         <span className="text-xs text-slate-700 leading-relaxed">{item}</span>
@@ -850,7 +601,7 @@ export default function BusinessPlan() {
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                   <h4 className="text-sm font-bold text-red-800 mb-3 uppercase tracking-wider">Threats</h4>
                   <ul className="space-y-2">
-                    {swotData.threats.map((item, i) => (
+                    {SWOT_INIT.threats.map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 shrink-0" />
                         <span className="text-xs text-slate-700 leading-relaxed">{item}</span>
@@ -871,7 +622,7 @@ export default function BusinessPlan() {
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <h4 className="text-sm font-bold text-blue-800 mb-3 uppercase tracking-wider">Strengths</h4>
                   <ul className="space-y-2">
-                    {swotData.strengths.map((item, i) => (
+                    {SWOT_INIT.strengths.map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 shrink-0" />
                         <span className="text-xs text-slate-700 leading-relaxed">{item}</span>
@@ -882,7 +633,7 @@ export default function BusinessPlan() {
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                   <h4 className="text-sm font-bold text-amber-800 mb-3 uppercase tracking-wider">Weaknesses</h4>
                   <ul className="space-y-2">
-                    {swotData.weaknesses.map((item, i) => (
+                    {SWOT_INIT.weaknesses.map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5 shrink-0" />
                         <span className="text-xs text-slate-700 leading-relaxed">{item}</span>
@@ -923,7 +674,7 @@ export default function BusinessPlan() {
               <p className="text-xs text-slate-500 mb-4">{selectedValues.size}/3 selected</p>
 
               <div className="grid grid-cols-2 gap-2.5 mb-6">
-                {visionValues.map((val) => {
+                {VISION_VALUES.map((val) => {
                   const active = selectedValues.has(val);
                   return (
                     <button
@@ -992,13 +743,12 @@ export default function BusinessPlan() {
                   </span>
                 </div>
                 <div className="flex-1 grid grid-cols-2 gap-3">
-                  {[ansoffCells[0], ansoffCells[1]].filter(Boolean).map((cell) => {
-                    const id = cell.id || cell.title?.toLowerCase().replace(/\s+/g, "_") || String(Math.random());
-                    const sel = selectedGrowth === id;
+                  {[ANSOFF_CELLS[0], ANSOFF_CELLS[1]].map((cell) => {
+                    const sel = selectedGrowth === cell.id;
                     return (
                       <button
-                        key={id}
-                        onClick={() => setSelectedGrowth(id)}
+                        key={cell.id}
+                        onClick={() => setSelectedGrowth(cell.id)}
                         className={`p-5 rounded-xl border-2 text-left transition-all ${
                           sel ? "border-blue-600 bg-blue-50/60" : "border-slate-200 hover:border-slate-300"
                         }`}
@@ -1023,13 +773,12 @@ export default function BusinessPlan() {
                   </span>
                 </div>
                 <div className="flex-1 grid grid-cols-2 gap-3">
-                  {[ansoffCells[2], ansoffCells[3]].filter(Boolean).map((cell) => {
-                    const id = cell.id || cell.title?.toLowerCase().replace(/\s+/g, "_") || String(Math.random());
-                    const sel = selectedGrowth === id;
+                  {[ANSOFF_CELLS[2], ANSOFF_CELLS[3]].map((cell) => {
+                    const sel = selectedGrowth === cell.id;
                     return (
                       <button
-                        key={id}
-                        onClick={() => setSelectedGrowth(id)}
+                        key={cell.id}
+                        onClick={() => setSelectedGrowth(cell.id)}
                         className={`p-5 rounded-xl border-2 text-left transition-all ${
                           sel ? "border-blue-600 bg-blue-50/60" : "border-slate-200 hover:border-slate-300"
                         }`}
@@ -1071,7 +820,7 @@ export default function BusinessPlan() {
                 {selectedTargets.size}/5 targets selected · {kpiTargets.size}/1 KPI assigned
               </div>
 
-              {Object.entries(targetSections).map(([key, section]) => (
+              {Object.entries(TARGET_SECTIONS).map(([key, section]) => (
                 <div key={key} className="mb-8 last:mb-0">
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
                     <h3 className="text-base font-bold text-slate-900 uppercase tracking-wider mb-1">
@@ -1185,7 +934,7 @@ export default function BusinessPlan() {
               <p className="text-sm font-bold text-slate-900 mb-4">Assign a priority to each revenue stream</p>
 
               <div className="space-y-3">
-                {revenueStreams.map((stream) => {
+                {REVENUE_STREAMS.map((stream) => {
                   const current: RevenuePriority = revenuePriorities[stream.id] || "not_planned";
                   return (
                     <div key={stream.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
@@ -1254,7 +1003,7 @@ export default function BusinessPlan() {
               </p>
 
               <div className="space-y-3">
-                {risks.map((risk) => {
+                {RISKS.map((risk) => {
                   const sel = topRisks.has(risk.id);
                   return (
                     <div
@@ -1343,7 +1092,7 @@ export default function BusinessPlan() {
               </p>
 
               <div className="grid md:grid-cols-2 gap-3">
-                {moatOptions.map((moat) => {
+                {MOAT_OPTIONS.map((moat) => {
                   const sel = selectedMoats.has(moat.id);
                   return (
                     <button
