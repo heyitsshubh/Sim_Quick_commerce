@@ -63,11 +63,11 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
   const allComplete = completedSections.size === SECTIONS.length;
 
   return (
-    <div className="grid lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div className="lg:col-span-1">
-        <div className="bg-white rounded-xl shadow-lg p-4 sticky top-4">
+        <div className="bg-white rounded-xl shadow-lg p-4 lg:sticky lg:top-4">
           <div className="mb-4">
-            <h3 className="font-semibold text-slate-900">Decision Sections</h3>
+            <h3 className="font-semibold text-slate-900 text-sm md:text-base">Decision Sections</h3>
             <p className="text-xs text-slate-600 mt-1">Complete all sections to finish round</p>
           </div>
           <div className="space-y-2">
@@ -80,7 +80,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm md:text-base ${
                     isActive
                       ? 'bg-blue-600 text-white'
                       : isComplete
@@ -89,11 +89,11 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
                   }`}
                 >
                   {isComplete ? (
-                    <CheckCircle2 className="w-5 h-5" />
+                    <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
                   ) : (
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-5 h-5 flex-shrink-0" />
                   )}
-                  <span className="text-sm font-medium">{section.label}</span>
+                  <span className="text-xs md:text-sm font-medium truncate">{section.label}</span>
                 </button>
               );
             })}
@@ -101,8 +101,8 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
 
           <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-slate-700">Progress</span>
-              <span className="text-sm font-bold text-slate-900">
+              <span className="text-xs md:text-sm font-medium text-slate-700">Progress</span>
+              <span className="text-xs md:text-sm font-bold text-slate-900">
                 {completedSections.size}/{SECTIONS.length}
               </span>
             </div>
@@ -117,7 +117,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
           {allComplete && (
             <button
               onClick={handleFinish}
-              className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2 animate-pulse"
+              className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2 animate-pulse text-sm md:text-base"
             >
               <CheckCircle2 className="w-5 h-5" />
               Complete Round
@@ -128,7 +128,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
       </div>
 
       <div className="lg:col-span-3">
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
           {activeSection === 'business' && (
             <BusinessModelSection
               round={round}

@@ -67,35 +67,35 @@ export default function GameBoard({
     <div className="min-h-screen bg-slate-50">
       {showGuide && <GameGuide onClose={() => setShowGuide(false)} />}
 
-      <div className="max-w-7xl mx-auto py-4">
+      <div className="max-w-7xl mx-auto py-4 px-4">
         <TopNav />
         
         {/* ROUNDS HEADER */}
         <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm px-4 py-4">
-          <div className="flex items-start justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-slate-900">
+              <h2 className="text-lg md:text-xl font-bold text-slate-900">
                 Round {gameState.currentRound} of {gameState.maxRounds}
               </h2>
-              <p className="text-sm text-slate-600 mt-1">
+              <p className="text-xs md:text-sm text-slate-600 mt-1 line-clamp-2">
                 {roundInfo?.title}: {roundInfo?.description}
               </p>
 
-              <div className="mt-3">
+              <div className="mt-3 overflow-x-auto">
                 <RoundsStrip currentRound={gameState.currentRound} maxRounds={gameState.maxRounds} />
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4 flex-wrap">
               <button
                 onClick={() => setShowGuide(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-md transition"
+                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-md transition text-sm md:text-base"
               >
                 <HelpCircle className="w-5 h-5" />
                 <span className="hidden sm:inline">Game Guide</span>
               </button>
 
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap">
                 <Trophy className="w-5 h-5 text-amber-500" />
                 <span className="font-semibold text-slate-900">
                   {currentPlayer.score} pts

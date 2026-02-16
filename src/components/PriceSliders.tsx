@@ -6,8 +6,8 @@ export default function PriceSliders({
   onChange
 }: any) {
   return (
-    <div className="border rounded-xl p-4 bg-slate-50">
-      <label className="block text-sm font-medium mb-2">
+    <div className="border rounded-xl p-3 md:p-4 bg-slate-50">
+      <label className="block text-xs md:text-sm font-medium mb-2 truncate">
         {name} Price
       </label>
 
@@ -21,7 +21,7 @@ export default function PriceSliders({
         className="w-full"
       />
 
-      <div className="mt-2 text-right font-semibold">
+      <div className="mt-2 text-right font-semibold text-sm md:text-base">
         ₹{price}
       </div>
     </div>

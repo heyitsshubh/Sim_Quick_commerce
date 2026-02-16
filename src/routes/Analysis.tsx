@@ -101,32 +101,32 @@ export default function AnalysisPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 ">
-      <div className="max-w-7xl mx-auto py-4">
+      <div className="max-w-7xl mx-auto py-4 px-4">
         <TopNav />
          {/* ROUNDS HEADER (added) */}
         <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm px-4 py-4">
-          <div className="max-w-7xl mx-auto flex items-start justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-4 md:gap-6">
             <div className="flex-1 min-w-0">
               <h2 className="text-xl font-bold text-slate-900">Round 1 of 8</h2>
-              <p className="text-sm text-slate-600 mt-1">
+              <p className="text-sm text-slate-600 mt-1 line-clamp-2">
                 Foundation: Fruits, dairy, cooking staples, snacks, beverages
               </p>
 
-              <div className="mt-3">
+              <div className="mt-3 overflow-x-auto">
                 <RoundsStrip currentRound={1} maxRounds={8} />
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <button
                 onClick={() => {}}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-md transition"
+                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-md transition text-sm md:text-base"
               >
                 <HelpCircle className="w-5 h-5" />
                 <span className="hidden sm:inline">Game Guide</span>
               </button>
 
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
                 <Trophy className="w-5 h-5 text-amber-500" />
                 <span className="font-semibold text-slate-900">0 pts</span>
               </div>
@@ -135,9 +135,9 @@ export default function AnalysisPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 flex gap-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
         {/* LEFT SIDEBAR */}
-        <div className="w-72">
+        <div className="w-full lg:w-72">
           <div className="bg-white rounded-xl shadow-lg p-4 sticky top-4">
             <div className="mb-4">
               <h3 className="font-bold text-black text-lg">Categories</h3>
@@ -210,8 +210,8 @@ export default function AnalysisPage() {
         </div>
 
         {/* MAIN CONTENT */}
-            <div className="flex-1 space-y-6">
--                   {!analysisData && (
+            <div className="flex-1 space-y-6 w-full">
+                   {!analysisData && (
             activeCategory ? (
               <CategorySummary
                 category={activeCategory}
@@ -228,7 +228,7 @@ export default function AnalysisPage() {
           {analysisData && (
             <>
               {/* KPI ROW */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 <Card label="Core Score" value={analysisData.coreScore.toFixed(1)} color="blue" />
                 <Card label="Multiplier" value={`×${analysisData.multiplierOnCoreScore.toFixed(2)}`} color="emerald" />
                 <Card label="Total Score" value={(analysisData.totalScore ?? analysisData.finalScore)?.toLocaleString() || "0"} color="amber" />
@@ -236,14 +236,14 @@ export default function AnalysisPage() {
               </div>
 
               {/* BREAKDOWN BARS */}
-              <div className="bg-white border rounded-2xl p-6">
-                <h3 className="font-bold mb-4">Core Score Breakdown</h3>
+              <div className="bg-white border rounded-2xl p-4 md:p-6">
+                <h3 className="font-bold mb-4 text-base md:text-lg">Core Score Breakdown</h3>
                 <div className="space-y-4">
                   {analysisData.breakdown.map((b, i) => (
                     <div key={i}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>{b.keyIndicator}</span>
-                        <span className="font-bold">{b.totalScore ?? b.yourTotalScore ?? 0}</span>
+                      <div className="flex justify-between text-xs md:text-sm mb-1">
+                        <span className="truncate pr-2">{b.keyIndicator}</span>
+                        <span className="font-bold whitespace-nowrap">{b.totalScore ?? b.yourTotalScore ?? 0}</span>
                       </div>
                       <div className="h-3 bg-slate-100 rounded-full">
                         <div
@@ -258,32 +258,32 @@ export default function AnalysisPage() {
 
               {/* MULTIPLIERS */}
 
-<div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-  <div className="flex items-center justify-between mb-4">
+<div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-5">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
     <div>
-      <h3 className="text-lg font-semibold text-slate-900">Multipliers on Core Score</h3>
-      <p className="text-xs text-slate-500">Every decision affects demand — grouped by category</p>
+      <h3 className="text-base md:text-lg font-semibold text-slate-900">Multipliers on Core Score</h3>
+      <p className="text-xs text-slate-500 mt-1">Every decision affects demand — grouped by category</p>
     </div>
-    <span className="text-emerald-600 font-bold text-lg">×{analysisData.multiplierOnCoreScore}</span>
+    <span className="text-emerald-600 font-bold text-lg md:text-xl whitespace-nowrap">×{analysisData.multiplierOnCoreScore}</span>
   </div>
 
-  <div className="grid md:grid-cols-2 gap-3">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
     {(analysisData.multipliers ?? analysisData.coreMultipliers)?.map((m, i) => {
       const val = m.value ?? m.multiplier ?? 1;
       const positive = val >= 1;
       return (
         <div
           key={i}
-          className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all
+          className={`flex items-center justify-between px-3 md:px-4 py-2 md:py-3 rounded-xl border transition-all
           ${positive ? 'border-blue-200 bg-blue-50/40' : 'border-red-200 bg-red-50/40'}`}
         >
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-900 truncate">{m.title}</p>
+          <div className="min-w-0 mr-2">
+            <p className="text-xs md:text-sm font-semibold text-slate-900 truncate">{m.title}</p>
             <p className="text-xs text-slate-500 line-clamp-2">{m.description}</p>
           </div>
 
           <span
-            className={`ml-3 text-sm font-bold px-3 py-1 rounded-lg whitespace-nowrap
+            className={`ml-2 text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-lg whitespace-nowrap
             ${positive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}
           >
             ×{val.toFixed(2)}
@@ -293,7 +293,7 @@ export default function AnalysisPage() {
     })}
   </div>
 
-  <div className="mt-5 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
+  <div className="mt-5 bg-blue-50 border border-blue-200 rounded-xl p-3 md:p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
     <div>
       <p className="text-xs text-blue-600 font-medium">Core × Multiplier</p>
       <p className="text-sm font-semibold text-slate-900">Your Total Score</p>
@@ -307,11 +307,11 @@ export default function AnalysisPage() {
 
 {/* COMPETITORS + MARKET SHARE */}
 {analysisData && (
-  <div className="grid lg:grid-cols-5 gap-4">
+  <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
     {/* Competitive Landscape */}
-    <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-      <h2 className="text-lg font-bold text-slate-900 mb-1">Competitive Landscape</h2>
+    <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5">
+      <h2 className="text-base md:text-lg font-bold text-slate-900 mb-1">Competitive Landscape</h2>
       <p className="text-xs text-slate-500 mb-4">Score comparison — all companies in this segment</p>
 
       <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 mb-4 text-xs text-amber-700">
@@ -326,11 +326,11 @@ export default function AnalysisPage() {
 
           return (
             <div key={i}>
-              <div className="flex justify-between text-sm mb-1">
-                <span className={isYou ? "font-semibold text-blue-600" : "text-slate-600"}>
+              <div className="flex justify-between text-xs md:text-sm mb-1">
+                <span className={`${isYou ? "font-semibold text-blue-600" : "text-slate-600"} truncate`}>
                   {c.name}
                 </span>
-                <span className={isYou ? "font-bold text-blue-600" : "font-semibold"}>
+                <span className={`${isYou ? "font-bold text-blue-600" : "font-semibold"} whitespace-nowrap ml-2`}>
                   {c.score.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                 </span>
               </div>
@@ -346,23 +346,23 @@ export default function AnalysisPage() {
         })}
       </div>
 
-      <div className="mt-4 pt-3 border-t text-sm flex justify-between font-semibold">
+      <div className="mt-4 pt-3 border-t text-xs md:text-sm flex justify-between font-semibold">
         <span>Total segment score</span>
-        <span>
+        <span className="whitespace-nowrap ml-2">
           {analysisData.competitors?.reduce((a, b) => a + b.score, 0).toLocaleString('en-IN')}
         </span>
       </div>
     </div>
 
     {/* Market Share Donut */}
-    <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col">
-      <h2 className="text-lg font-bold text-slate-900 mb-1">Market Share</h2>
+    <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 flex flex-col">
+      <h2 className="text-base md:text-lg font-bold text-slate-900 mb-1">Market Share</h2>
       <p className="text-xs text-slate-500 mb-4">Your position within the segment</p>
 
       {analysisData.market && (
         <>
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-40 h-40">
+            <div className="relative w-32 h-32 md:w-40 md:h-40">
               <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
                 <circle cx="60" cy="60" r="48" fill="none" stroke="#e2e8f0" strokeWidth="10" />
                 <circle
@@ -378,7 +378,7 @@ export default function AnalysisPage() {
               </svg>
 
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-blue-600">
+                <span className="text-2xl md:text-3xl font-bold text-blue-600">
                   {analysisData.market.marketShare.toFixed(1)}%
                 </span>
                 <span className="text-xs text-slate-400">share</span>
@@ -386,18 +386,18 @@ export default function AnalysisPage() {
             </div>
           </div>
 
-          <div className="divide-y mt-4 text-sm">
+          <div className="divide-y mt-4 text-xs md:text-sm">
             <div className="flex justify-between py-2">
               <span>Total segment size</span>
-              <span className="font-semibold">{analysisData.market.totalMarketSize.toLocaleString('en-IN')}</span>
+              <span className="font-semibold whitespace-nowrap ml-2">{analysisData.market.totalMarketSize.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between py-2">
               <span>Your sales</span>
-              <span className="font-semibold text-blue-600">{analysisData.market.yourSales.toLocaleString('en-IN')}</span>
+              <span className="font-semibold text-blue-600 whitespace-nowrap ml-2">{analysisData.market.yourSales.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between py-2">
               <span>Direct demand</span>
-              <span className="font-semibold">{analysisData.market.directDemand.toLocaleString('en-IN')}</span>
+              <span className="font-semibold whitespace-nowrap ml-2">{analysisData.market.directDemand.toLocaleString('en-IN')}</span>
             </div>
           </div>
         </>
