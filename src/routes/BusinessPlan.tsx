@@ -802,11 +802,11 @@ export default function BusinessPlan() {
         {/* ════════════ SWOT ════════════ */}
         {activeTab === "SWOT" && (
           <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-              <div className="flex items-start justify-between gap-6 mb-6">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 mb-6">
                 <div className="max-w-2xl">
-                  <h2 className="text-lg font-bold text-slate-900 mb-2">SWOT Analysis</h2>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <h2 className="text-base md:text-lg font-bold text-slate-900 mb-2">SWOT Analysis</h2>
+                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
                     Assess internal strengths & weaknesses and external opportunities & threats to align decisions with
                     market realities.
                   </p>
@@ -814,21 +814,21 @@ export default function BusinessPlan() {
                 <AdvisorCard />
               </div>
 
-              <p className="text-center text-xs font-bold tracking-widest text-slate-400 uppercase mb-4">
+              <p className="text-center text-[10px] md:text-xs font-bold tracking-widest text-slate-400 uppercase mb-4">
                 Strength, Weakness, Opportunity & Threat Analysis
               </p>
 
               {/* Axis headers */}
-              <div className="grid grid-cols-[auto_1fr_1fr] gap-0 mb-1">
+              <div className="hidden md:grid grid-cols-[auto_1fr_1fr] gap-0 mb-1">
                 <div className="w-8" />
                 <p className="text-center text-xs font-semibold text-slate-500">Positive</p>
                 <p className="text-center text-xs font-semibold text-slate-500">Negative</p>
               </div>
 
               {/* Grid */}
-              <div className="grid grid-cols-[auto_1fr_1fr] gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_1fr] gap-3">
                 {/* External row */}
-                <div className="flex items-center">
+                <div className="hidden md:flex items-center">
                   <span
                     className="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
                     style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
@@ -837,7 +837,7 @@ export default function BusinessPlan() {
                   </span>
                 </div>
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                  <h4 className="text-sm font-bold text-emerald-800 mb-3 uppercase tracking-wider">Opportunities</h4>
+                  <h4 className="text-xs md:text-sm font-bold text-emerald-800 mb-3 uppercase tracking-wider">Opportunities</h4>
                   <ul className="space-y-2">
                     {swotData.opportunities.map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
@@ -848,7 +848,7 @@ export default function BusinessPlan() {
                   </ul>
                 </div>
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                  <h4 className="text-sm font-bold text-red-800 mb-3 uppercase tracking-wider">Threats</h4>
+                  <h4 className="text-xs md:text-sm font-bold text-red-800 mb-3 uppercase tracking-wider">Threats</h4>
                   <ul className="space-y-2">
                     {swotData.threats.map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
@@ -860,7 +860,7 @@ export default function BusinessPlan() {
                 </div>
 
                 {/* Internal row */}
-                <div className="flex items-center">
+                <div className="hidden md:flex items-center">
                   <span
                     className="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
                     style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
@@ -869,7 +869,7 @@ export default function BusinessPlan() {
                   </span>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="text-sm font-bold text-blue-800 mb-3 uppercase tracking-wider">Strengths</h4>
+                  <h4 className="text-xs md:text-sm font-bold text-blue-800 mb-3 uppercase tracking-wider">Strengths</h4>
                   <ul className="space-y-2">
                     {swotData.strengths.map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
@@ -880,7 +880,7 @@ export default function BusinessPlan() {
                   </ul>
                 </div>
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                  <h4 className="text-sm font-bold text-amber-800 mb-3 uppercase tracking-wider">Weaknesses</h4>
+                  <h4 className="text-xs md:text-sm font-bold text-amber-800 mb-3 uppercase tracking-wider">Weaknesses</h4>
                   <ul className="space-y-2">
                     {swotData.weaknesses.map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
@@ -958,11 +958,11 @@ export default function BusinessPlan() {
         {/* ════════════ GROWTH ════════════ */}
         {activeTab === "Growth" && (
           <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-              <div className="flex items-start justify-between gap-6 mb-6">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 mb-6">
                 <div className="max-w-2xl">
-                  <h2 className="text-lg font-bold text-slate-900 mb-2">Growth Strategy — Ansoff Matrix</h2>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <h2 className="text-base md:text-lg font-bold text-slate-900 mb-2">Growth Strategy — Ansoff Matrix</h2>
+                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
                     Will you deepen share, expand categories, enter new cities, or diversify? Your choice shapes capital
                     allocation and risk.
                   </p>
@@ -970,10 +970,10 @@ export default function BusinessPlan() {
                 <AdvisorCard />
               </div>
 
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Growth Strategy</h3>
+              <h3 className="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Growth Strategy</h3>
 
               {/* Column headers */}
-              <div className="flex gap-3 mb-1">
+              <div className="hidden md:flex gap-3 mb-1">
                 <div className="w-8 shrink-0" />
                 <div className="flex-1 grid grid-cols-2 gap-3">
                   <p className="text-center text-xs font-semibold text-slate-500">Existing market</p>
@@ -982,8 +982,8 @@ export default function BusinessPlan() {
               </div>
 
               {/* Row: New product */}
-              <div className="flex gap-3 mb-3">
-                <div className="w-8 shrink-0 flex items-center justify-center">
+              <div className="flex flex-col md:flex-row gap-3 mb-3">
+                <div className="hidden md:flex w-8 shrink-0 items-center justify-center">
                   <span
                     className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap"
                     style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
@@ -991,7 +991,7 @@ export default function BusinessPlan() {
                     New product
                   </span>
                 </div>
-                <div className="flex-1 grid grid-cols-2 gap-3">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[ansoffCells[0], ansoffCells[1]].filter(Boolean).map((cell) => {
                     const id = cell.id || cell.title?.toLowerCase().replace(/\s+/g, "_") || String(Math.random());
                     const sel = selectedGrowth === id;
@@ -999,13 +999,13 @@ export default function BusinessPlan() {
                       <button
                         key={id}
                         onClick={() => setSelectedGrowth(id)}
-                        className={`p-5 rounded-xl border-2 text-left transition-all ${
+                        className={`p-4 md:p-5 rounded-xl border-2 text-left transition-all ${
                           sel ? "border-blue-600 bg-blue-50/60" : "border-slate-200 hover:border-slate-300"
                         }`}
                         style={{ aspectRatio: "1/1", display: "flex", flexDirection: "column", justifyContent: "center" }}
                       >
-                        <h4 className="text-sm font-bold text-slate-900 mb-1.5">{cell.title}</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">{cell.desc}</p>
+                        <h4 className="text-xs md:text-sm font-bold text-slate-900 mb-1.5">{cell.title}</h4>
+                        <p className="text-[11px] md:text-xs text-slate-600 leading-relaxed">{cell.desc}</p>
                       </button>
                     );
                   })}
@@ -1013,8 +1013,8 @@ export default function BusinessPlan() {
               </div>
 
               {/* Row: Existing product */}
-              <div className="flex gap-3">
-                <div className="w-8 shrink-0 flex items-center justify-center">
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="hidden md:flex w-8 shrink-0 items-center justify-center">
                   <span
                     className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap"
                     style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
@@ -1022,7 +1022,7 @@ export default function BusinessPlan() {
                     Existing product
                   </span>
                 </div>
-                <div className="flex-1 grid grid-cols-2 gap-3">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[ansoffCells[2], ansoffCells[3]].filter(Boolean).map((cell) => {
                     const id = cell.id || cell.title?.toLowerCase().replace(/\s+/g, "_") || String(Math.random());
                     const sel = selectedGrowth === id;
@@ -1030,13 +1030,13 @@ export default function BusinessPlan() {
                       <button
                         key={id}
                         onClick={() => setSelectedGrowth(id)}
-                        className={`p-5 rounded-xl border-2 text-left transition-all ${
+                        className={`p-4 md:p-5 rounded-xl border-2 text-left transition-all ${
                           sel ? "border-blue-600 bg-blue-50/60" : "border-slate-200 hover:border-slate-300"
                         }`}
                         style={{ aspectRatio: "1/1", display: "flex", flexDirection: "column", justifyContent: "center" }}
                       >
-                        <h4 className="text-sm font-bold text-slate-900 mb-1.5">{cell.title}</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">{cell.desc}</p>
+                        <h4 className="text-xs md:text-sm font-bold text-slate-900 mb-1.5">{cell.title}</h4>
+                        <p className="text-[11px] md:text-xs text-slate-600 leading-relaxed">{cell.desc}</p>
                       </button>
                     );
                   })}
@@ -1170,11 +1170,11 @@ export default function BusinessPlan() {
         {/* ════════════ REVENUE MODEL ════════════ */}
         {activeTab === "Revenue Model" && (
           <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-              <div className="flex items-start justify-between gap-6 mb-6">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6 mb-6">
                 <div className="max-w-2xl">
-                  <h2 className="text-lg font-bold text-slate-900 mb-2">Revenue Model</h2>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <h2 className="text-base md:text-lg font-bold text-slate-900 mb-2">Revenue Model</h2>
+                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
                     Quick commerce isn't just about selling groceries. Classify each revenue stream by priority — this
                     influences capital allocation and financial scoring.
                   </p>
@@ -1182,7 +1182,7 @@ export default function BusinessPlan() {
                 <AdvisorCard />
               </div>
 
-              <p className="text-sm font-bold text-slate-900 mb-4">Assign a priority to each revenue stream</p>
+              <p className="text-xs md:text-sm font-bold text-slate-900 mb-4">Assign a priority to each revenue stream</p>
 
               <div className="space-y-3">
                 {revenueStreams.map((stream) => {
@@ -1190,13 +1190,13 @@ export default function BusinessPlan() {
                   return (
                     <div key={stream.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                       <div className="flex items-start gap-3 mb-3">
-                        <span className="text-2xl">{stream.icon}</span>
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-slate-900">{stream.label}</p>
+                        <span className="text-xl md:text-2xl">{stream.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">{stream.label}</p>
                           <p className="text-xs text-slate-500">{stream.desc}</p>
                         </div>
                       </div>
-                      <div className="flex gap-2 ml-9">
+                      <div className="flex flex-wrap gap-2 ml-0 md:ml-9">
                         {(Object.entries(PRIORITY_STYLES) as [RevenuePriority, { label: string; cls: string }][]).map(
                           ([priority, style]) => {
                             const active = current === priority;
