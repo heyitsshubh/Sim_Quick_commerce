@@ -206,15 +206,15 @@ const PRIORITY_STYLES: Record<RevenuePriority, { label: string; cls: string }> =
 
 // ─── REUSABLE COMPONENTS ─────────────────────────────────
 
-function AdvisorCard() {
-  return (
-    <div className="hidden md:flex flex-col items-center bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 shrink-0">
-      <div className="w-12 h-12 bg-slate-300 rounded-full mb-2" />
-      <span className="text-xs font-semibold text-slate-900">Strategy Advisor</span>
-      <span className="text-[10px] text-slate-500">Quick Commerce Expert</span>
-    </div>
-  );
-}
+// function AdvisorCard() {
+//   return (
+//     <div className="hidden md:flex flex-col items-center bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 shrink-0">
+//       <div className="w-12 h-12 bg-slate-300 rounded-full mb-2" />
+//       <span className="text-xs font-semibold text-slate-900">Strategy Advisor</span>
+//       <span className="text-[10px] text-slate-500">Quick Commerce Expert</span>
+//     </div>
+//   );
+// }
 
 function SaveButton({ onClick }: { onClick: () => void }) {
   return (
@@ -284,6 +284,7 @@ export default function BusinessPlan() {
   // Growth
   const [selectedGrowth, setSelectedGrowth] = useState("penetration");
   const [growthNote, setGrowthNote] = useState("");
+  const [growthValues, setGrowthValues] = useState<Record<string, string>>({});
 
   // Targets
   const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());
@@ -311,110 +312,110 @@ export default function BusinessPlan() {
     // loadMasterData();
   }, []);
 
-  const loadMasterData = async () => {
-    try {
-      const res = await axios.get(`${API}/master-data`);
-      const data = res.data;
+  // const loadMasterData = async () => {
+  //   try {
+  //     const res = await axios.get(`${API}/master-data`);
+  //     const data = res.data;
       
-      // Map API structure to component state
-      if (data.strategies) {
-        setCompetitiveOptions(data.strategies.map((s: any) => ({
-          id: s.title.toLowerCase().replace(/\s+&\s+/g, '_').replace(/\s+/g, '_'),
-          title: s.title,
-          desc: s.description
-        })));
-      }
+  //     // Map API structure to component state
+  //     if (data.strategies) {
+  //       setCompetitiveOptions(data.strategies.map((s: any) => ({
+  //         id: s.title.toLowerCase().replace(/\s+&\s+/g, '_').replace(/\s+/g, '_'),
+  //         title: s.title,
+  //         desc: s.description
+  //       })));
+  //     }
       
-      // Handle SWOT data - check for both direct properties and nested swotData
-      if (data.opportunities || data.threats || data.strengths || data.weaknesses) {
-        setSwotData({
-          opportunities: data.opportunities || [],
-          threats: data.threats || [],
-          strengths: data.strengths || [],
-          weaknesses: data.weaknesses || []
-        });
-      } else if (data.swotData) {
-        setSwotData(data.swotData);
-      }
+  //     // Handle SWOT data - check for both direct properties and nested swotData
+  //     if (data.opportunities || data.threats || data.strengths || data.weaknesses) {
+  //       setSwotData({
+  //         opportunities: data.opportunities || [],
+  //         threats: data.threats || [],
+  //         strengths: data.strengths || [],
+  //         weaknesses: data.weaknesses || []
+  //       });
+  //     } else if (data.swotData) {
+  //       setSwotData(data.swotData);
+  //     }
       
-      if (data.visionValues && Array.isArray(data.visionValues) && data.visionValues.length > 0) {
-        setVisionValues(data.visionValues);
-      } else if (data.values && Array.isArray(data.values) && data.values.length > 0) {
-        setVisionValues(data.values);
-      } else if (data.options && Array.isArray(data.options) && data.options.length > 0) {
-        setVisionValues(data.options);
-      }
+  //     if (data.visionValues && Array.isArray(data.visionValues) && data.visionValues.length > 0) {
+  //       setVisionValues(data.visionValues);
+  //     } else if (data.values && Array.isArray(data.values) && data.values.length > 0) {
+  //       setVisionValues(data.values);
+  //     } else if (data.options && Array.isArray(data.options) && data.options.length > 0) {
+  //       setVisionValues(data.options);
+  //     }
       
-      if (data.ansoffCells) {
-        setAnsoffCells(data.ansoffCells.map((c: any) => ({
-          id: c.id,
-          title: c.title,
-          desc: c.description || c.desc
-        })));
-      }
-      // ansoffCells set from API above; no defaults injected
+  //     if (data.ansoffCells) {
+  //       setAnsoffCells(data.ansoffCells.map((c: any) => ({
+  //         id: c.id,
+  //         title: c.title,
+  //         desc: c.description || c.desc
+  //       })));
+  //     }
+  //     // ansoffCells set from API above; no defaults injected
       
-      const normalizedTargets = normalizeTargetSections(
-        data.targetSections || data.sections || data.targets
-      );
-      if (normalizedTargets) {
-        setTargetSections(normalizedTargets);
-      } else if (data.financial && typeof data.financial === "object") {
-        setTargetSections(buildTargetsFromFinancial(data.financial));
-      }
+  //     const normalizedTargets = normalizeTargetSections(
+  //       data.targetSections || data.sections || data.targets
+  //     );
+  //     if (normalizedTargets) {
+  //       setTargetSections(normalizedTargets);
+  //     } else if (data.financial && typeof data.financial === "object") {
+  //       setTargetSections(buildTargetsFromFinancial(data.financial));
+  //     }
       
-      const normalizedRevenueStreams = normalizeRevenueStreams(
-        data.revenueStreams || data.revenueModel || data.revenue || data.streams
-      );
-      if (normalizedRevenueStreams) {
-        setRevenueStreams(normalizedRevenueStreams);
-      }
+  //     const normalizedRevenueStreams = normalizeRevenueStreams(
+  //       data.revenueStreams || data.revenueModel || data.revenue || data.streams
+  //     );
+  //     if (normalizedRevenueStreams) {
+  //       setRevenueStreams(normalizedRevenueStreams);
+  //     }
       
-      if (data.risks) {
-        setRisks(data.risks.map((r: any, idx: number) => ({
-          id: r.id || r.name || `risk_${idx + 1}`,
-          label: r.label || r.name || "",
-          desc: r.description || r.desc || "",
-          likelihood: r.likelihood ?? 3,
-          impact: r.impact ?? 3
-        })));
-      }
+  //     if (data.risks) {
+  //       setRisks(data.risks.map((r: any, idx: number) => ({
+  //         id: r.id || r.name || `risk_${idx + 1}`,
+  //         label: r.label || r.name || "",
+  //         desc: r.description || r.desc || "",
+  //         likelihood: r.likelihood ?? 3,
+  //         impact: r.impact ?? 3
+  //       })));
+  //     }
       
-      if (data.moatOptions) {
-        setMoatOptions(data.moatOptions.map((m: any) => ({
-          id: m.id || m.label?.toLowerCase().replace(/\s+/g, "_") || "",
-          label: m.label || m.name || "",
-          desc: m.description || m.desc || "",
-          category: m.category || "Moat",
-          effort: m.effort ?? 3,
-          impact: m.impact ?? 3
-        })));
-      } else if (data.moats) {
-        setMoatOptions(data.moats.map((m: any) => {
-          if (typeof m === "string") {
-            return {
-              id: m.toLowerCase().replace(/\s+/g, "_"),
-              label: m,
-              desc: "",
-              category: "Moat",
-              effort: 3,
-              impact: 3,
-            };
-          }
-          return {
-            id: m.id || m.label?.toLowerCase().replace(/\s+/g, "_") || "",
-            label: m.label || m.name || "",
-            desc: m.description || m.desc || "",
-            category: m.category || "Moat",
-            effort: m.effort ?? 3,
-            impact: m.impact ?? 3,
-          };
-        }));
-      }
-    } catch (e) {
-      console.error("Failed to load master data:", e);
-    }
-  };
+  //     if (data.moatOptions) {
+  //       setMoatOptions(data.moatOptions.map((m: any) => ({
+  //         id: m.id || m.label?.toLowerCase().replace(/\s+/g, "_") || "",
+  //         label: m.label || m.name || "",
+  //         desc: m.description || m.desc || "",
+  //         category: m.category || "Moat",
+  //         effort: m.effort ?? 3,
+  //         impact: m.impact ?? 3
+  //       })));
+  //     } else if (data.moats) {
+  //       setMoatOptions(data.moats.map((m: any) => {
+  //         if (typeof m === "string") {
+  //           return {
+  //             id: m.toLowerCase().replace(/\s+/g, "_"),
+  //             label: m,
+  //             desc: "",
+  //             category: "Moat",
+  //             effort: 3,
+  //             impact: 3,
+  //           };
+  //         }
+  //         return {
+  //           id: m.id || m.label?.toLowerCase().replace(/\s+/g, "_") || "",
+  //           label: m.label || m.name || "",
+  //           desc: m.description || m.desc || "",
+  //           category: m.category || "Moat",
+  //           effort: m.effort ?? 3,
+  //           impact: m.impact ?? 3,
+  //         };
+  //       }));
+  //     }
+  //   } catch (e) {
+  //     console.error("Failed to load master data:", e);
+  //   }
+  // };
 
   // ════════ LOAD SECTION DATA FROM API ════════
   useEffect(() => {
@@ -480,6 +481,9 @@ export default function BusinessPlan() {
             setSelectedGrowth(data.strategy);
           }
           setGrowthNote(data.note || "");
+          if (data.values && typeof data.values === "object") {
+            setGrowthValues(data.values);
+          }
           if (data.ansoffCells) {
             setAnsoffCells(data.ansoffCells);
           }
@@ -598,7 +602,7 @@ export default function BusinessPlan() {
         break;
 
       case "growth":
-        payload = { strategy: selectedGrowth, note: growthNote };
+        payload = { strategy: selectedGrowth, note: growthNote, values: growthValues };
         break;
 
       case "targets":
@@ -751,7 +755,6 @@ export default function BusinessPlan() {
                     multipliers across all decision areas.
                   </p>
                 </div>
-                <AdvisorCard />
               </div>
 
               <p className="text-sm font-semibold text-slate-700 mb-4">
@@ -811,7 +814,6 @@ export default function BusinessPlan() {
                     market realities.
                   </p>
                 </div>
-                <AdvisorCard />
               </div>
 
               <p className="text-center text-[10px] md:text-xs font-bold tracking-widest text-slate-400 uppercase mb-4">
@@ -891,12 +893,6 @@ export default function BusinessPlan() {
                   </ul>
                 </div>
               </div>
-
-              <NoteArea
-                value={swotNote}
-                onChange={(e) => setSwotNote(e.target.value)}
-                placeholder="How will you leverage strengths and address weaknesses?"
-              />
             </div>
             <SaveButton onClick={handleSave} />
           </div>
@@ -914,7 +910,7 @@ export default function BusinessPlan() {
                     write a mission statement.
                   </p>
                 </div>
-                <AdvisorCard />
+
               </div>
 
               <p className="text-sm font-bold text-slate-900 mb-1">
@@ -967,7 +963,6 @@ export default function BusinessPlan() {
                     allocation and risk.
                   </p>
                 </div>
-                <AdvisorCard />
               </div>
 
               <h3 className="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Growth Strategy</h3>
@@ -995,18 +990,31 @@ export default function BusinessPlan() {
                   {[ansoffCells[0], ansoffCells[1]].filter(Boolean).map((cell) => {
                     const id = cell.id || cell.title?.toLowerCase().replace(/\s+/g, "_") || String(Math.random());
                     const sel = selectedGrowth === id;
+                    const inputValue = growthValues[id] || "";
                     return (
-                      <button
+                      <div
                         key={id}
-                        onClick={() => setSelectedGrowth(id)}
                         className={`p-4 md:p-5 rounded-xl border-2 text-left transition-all ${
                           sel ? "border-blue-600 bg-blue-50/60" : "border-slate-200 hover:border-slate-300"
                         }`}
-                        style={{ aspectRatio: "1/1", display: "flex", flexDirection: "column", justifyContent: "center" }}
                       >
-                        <h4 className="text-xs md:text-sm font-bold text-slate-900 mb-1.5">{cell.title}</h4>
-                        <p className="text-[11px] md:text-xs text-slate-600 leading-relaxed">{cell.desc}</p>
-                      </button>
+                        <button
+                          onClick={() => setSelectedGrowth(id)}
+                          className="w-full text-left mb-3"
+                          style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}
+                        >
+                          <h4 className="text-xs md:text-sm font-bold text-slate-900 mb-1.5">{cell.title}</h4>
+                          <p className="text-[11px] md:text-xs text-slate-600 leading-relaxed">{cell.desc}</p>
+                        </button>
+                        <input
+                          type="text"
+                          placeholder="Enter value"
+                          value={inputValue}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setGrowthValues({ ...growthValues, [id]: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
+                        />
+                      </div>
                     );
                   })}
                 </div>
@@ -1026,28 +1034,35 @@ export default function BusinessPlan() {
                   {[ansoffCells[2], ansoffCells[3]].filter(Boolean).map((cell) => {
                     const id = cell.id || cell.title?.toLowerCase().replace(/\s+/g, "_") || String(Math.random());
                     const sel = selectedGrowth === id;
+                    const inputValue = growthValues[id] || "";
                     return (
-                      <button
+                      <div
                         key={id}
-                        onClick={() => setSelectedGrowth(id)}
                         className={`p-4 md:p-5 rounded-xl border-2 text-left transition-all ${
                           sel ? "border-blue-600 bg-blue-50/60" : "border-slate-200 hover:border-slate-300"
                         }`}
-                        style={{ aspectRatio: "1/1", display: "flex", flexDirection: "column", justifyContent: "center" }}
                       >
-                        <h4 className="text-xs md:text-sm font-bold text-slate-900 mb-1.5">{cell.title}</h4>
-                        <p className="text-[11px] md:text-xs text-slate-600 leading-relaxed">{cell.desc}</p>
-                      </button>
+                        <button
+                          onClick={() => setSelectedGrowth(id)}
+                          className="w-full text-left mb-3"
+                          style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}
+                        >
+                          <h4 className="text-xs md:text-sm font-bold text-slate-900 mb-1.5">{cell.title}</h4>
+                          <p className="text-[11px] md:text-xs text-slate-600 leading-relaxed">{cell.desc}</p>
+                        </button>
+                        <input
+                          type="text"
+                          placeholder="Enter value"
+                          value={inputValue}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setGrowthValues({ ...growthValues, [id]: e.target.value })}
+                          className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
+                        />
+                      </div>
                     );
                   })}
                 </div>
               </div>
-
-              <NoteArea
-                value={growthNote}
-                onChange={(e) => setGrowthNote(e.target.value)}
-                placeholder="Why does this growth strategy fit your current position?"
-              />
             </div>
             <SaveButton onClick={handleSave} />
           </div>
@@ -1064,7 +1079,6 @@ export default function BusinessPlan() {
                     Choose 5 targets and set their level. Pick one as your KPI for 5× scoring.
                   </p>
                 </div>
-                <AdvisorCard />
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-6 text-xs text-blue-700 font-medium">
@@ -1179,7 +1193,6 @@ export default function BusinessPlan() {
                     influences capital allocation and financial scoring.
                   </p>
                 </div>
-                <AdvisorCard />
               </div>
 
               <p className="text-xs md:text-sm font-bold text-slate-900 mb-4">Assign a priority to each revenue stream</p>
@@ -1190,7 +1203,7 @@ export default function BusinessPlan() {
                   return (
                     <div key={stream.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                       <div className="flex items-start gap-3 mb-3">
-                        <span className="text-xl md:text-2xl">{stream.icon}</span>
+                        {/* <span className="text-xl md:text-2xl">{stream.icon}</span> */}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-900 truncate">{stream.label}</p>
                           <p className="text-xs text-slate-500">{stream.desc}</p>
@@ -1246,7 +1259,6 @@ export default function BusinessPlan() {
                     negative event impacts during the simulation.
                   </p>
                 </div>
-                <AdvisorCard />
               </div>
 
               <p className="text-xs text-blue-700 font-medium bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-6">
@@ -1335,7 +1347,7 @@ export default function BusinessPlan() {
                     over rounds and create advantages competitors can't easily replicate.
                   </p>
                 </div>
-                <AdvisorCard />
+              
               </div>
 
               <p className="text-xs text-blue-700 font-medium bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-6">
