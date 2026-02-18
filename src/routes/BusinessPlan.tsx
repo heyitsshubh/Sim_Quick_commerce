@@ -308,9 +308,9 @@ export default function BusinessPlan() {
 
   // ════════ LOAD MASTER DATA FROM API (once on mount) ════════
   // Disabled: user requested no automatic master-data fetch
-  useEffect(() => {
-    // loadMasterData();
-  }, []);
+  // useEffect(() => {
+  //   // loadMasterData();
+  // }, []);
 
   // const loadMasterData = async () => {
   //   try {
@@ -490,14 +490,23 @@ export default function BusinessPlan() {
           break;
 
         case "targets": {
-          // Do not prefill targets/values/KPI; user will choose and slide manually
+          const targetPayload = data?.data ?? data;
           const normalizedTargets = normalizeTargetSections(
-            data.targetSections || data.sections || data.targets
+            targetPayload.targetSections || targetPayload.sections || targetPayload.targets
           );
           if (normalizedTargets) {
             setTargetSections(normalizedTargets);
-          } else if (data.financial && typeof data.financial === "object") {
-            setTargetSections(buildTargetsFromFinancial(data.financial));
+          } else if (targetPayload.financial && typeof targetPayload.financial === "object") {
+            setTargetSections(buildTargetsFromFinancial(targetPayload.financial));
+          }
+          if (Array.isArray(targetPayload.selectedTargets)) {
+            setSelectedTargets(new Set(targetPayload.selectedTargets));
+          }
+          if (targetPayload.targetValues && typeof targetPayload.targetValues === "object") {
+            setTargetValues(targetPayload.targetValues);
+          }
+          if (Array.isArray(targetPayload.kpiTargets)) {
+            setKpiTargets(new Set(targetPayload.kpiTargets));
           }
           break;
         }
@@ -594,7 +603,7 @@ export default function BusinessPlan() {
         break;
 
       case "swot":
-        payload = { note: swotNote };
+        payload = { note: swotNote, ...swotData, swotData };
         break;
 
       case "vision":
@@ -672,6 +681,27 @@ export default function BusinessPlan() {
       else if (next.size < 3) next.add(id);
       return next;
     });
+  };
+
+  const updateSwotItem = (key: keyof SwotData, index: number, value: string) => {
+    setSwotData((prev) => ({
+      ...prev,
+      [key]: prev[key].map((item, i) => (i === index ? value : item)),
+    }));
+  };
+
+  const addSwotItem = (key: keyof SwotData) => {
+    setSwotData((prev) => ({
+      ...prev,
+      [key]: [...prev[key], ""],
+    }));
+  };
+
+  const removeSwotItem = (key: keyof SwotData, index: number) => {
+    setSwotData((prev) => ({
+      ...prev,
+      [key]: prev[key].filter((_, i) => i !== index),
+    }));
   };
 
   const getTargetVal = (t: Target) => targetValues[t.id] ?? t.defaultVal;
@@ -840,25 +870,59 @@ export default function BusinessPlan() {
                 </div>
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                   <h4 className="text-xs md:text-sm font-bold text-emerald-800 mb-3 uppercase tracking-wider">Opportunities</h4>
-                  <ul className="space-y-2">
+                  <div className="space-y-2">
                     {swotData.opportunities.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 shrink-0" />
-                        <span className="text-xs text-slate-700 leading-relaxed">{item}</span>
-                      </li>
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
+                        <input
+                          value={item}
+                          onChange={(e) => updateSwotItem("opportunities", i, e.target.value)}
+                          placeholder="Add opportunity"
+                          className="flex-1 px-3 py-2 text-xs border border-emerald-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300/40"
+                        />
+                        <button
+                          onClick={() => removeSwotItem("opportunities", i)}
+                          className="text-[10px] text-slate-400 hover:text-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     ))}
-                  </ul>
+                    <button
+                      onClick={() => addSwotItem("opportunities")}
+                      className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                    >
+                      + Add opportunity
+                    </button>
+                  </div>
                 </div>
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                   <h4 className="text-xs md:text-sm font-bold text-red-800 mb-3 uppercase tracking-wider">Threats</h4>
-                  <ul className="space-y-2">
+                  <div className="space-y-2">
                     {swotData.threats.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 shrink-0" />
-                        <span className="text-xs text-slate-700 leading-relaxed">{item}</span>
-                      </li>
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0" />
+                        <input
+                          value={item}
+                          onChange={(e) => updateSwotItem("threats", i, e.target.value)}
+                          placeholder="Add threat"
+                          className="flex-1 px-3 py-2 text-xs border border-red-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-300/40"
+                        />
+                        <button
+                          onClick={() => removeSwotItem("threats", i)}
+                          className="text-[10px] text-slate-400 hover:text-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     ))}
-                  </ul>
+                    <button
+                      onClick={() => addSwotItem("threats")}
+                      className="text-[11px] font-semibold text-red-700 hover:text-red-800"
+                    >
+                      + Add threat
+                    </button>
+                  </div>
                 </div>
 
                 {/* Internal row */}
@@ -872,25 +936,59 @@ export default function BusinessPlan() {
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <h4 className="text-xs md:text-sm font-bold text-blue-800 mb-3 uppercase tracking-wider">Strengths</h4>
-                  <ul className="space-y-2">
+                  <div className="space-y-2">
                     {swotData.strengths.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 shrink-0" />
-                        <span className="text-xs text-slate-700 leading-relaxed">{item}</span>
-                      </li>
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full shrink-0" />
+                        <input
+                          value={item}
+                          onChange={(e) => updateSwotItem("strengths", i, e.target.value)}
+                          placeholder="Add strength"
+                          className="flex-1 px-3 py-2 text-xs border border-blue-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-300/40"
+                        />
+                        <button
+                          onClick={() => removeSwotItem("strengths", i)}
+                          className="text-[10px] text-slate-400 hover:text-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     ))}
-                  </ul>
+                    <button
+                      onClick={() => addSwotItem("strengths")}
+                      className="text-[11px] font-semibold text-blue-700 hover:text-blue-800"
+                    >
+                      + Add strength
+                    </button>
+                  </div>
                 </div>
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                   <h4 className="text-xs md:text-sm font-bold text-amber-800 mb-3 uppercase tracking-wider">Weaknesses</h4>
-                  <ul className="space-y-2">
+                  <div className="space-y-2">
                     {swotData.weaknesses.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5 shrink-0" />
-                        <span className="text-xs text-slate-700 leading-relaxed">{item}</span>
-                      </li>
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />
+                        <input
+                          value={item}
+                          onChange={(e) => updateSwotItem("weaknesses", i, e.target.value)}
+                          placeholder="Add weakness"
+                          className="flex-1 px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-300/40"
+                        />
+                        <button
+                          onClick={() => removeSwotItem("weaknesses", i)}
+                          className="text-[10px] text-slate-400 hover:text-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     ))}
-                  </ul>
+                    <button
+                      onClick={() => addSwotItem("weaknesses")}
+                      className="text-[11px] font-semibold text-amber-700 hover:text-amber-800"
+                    >
+                      + Add weakness
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
