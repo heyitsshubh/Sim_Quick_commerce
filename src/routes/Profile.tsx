@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios, { AxiosError } from "axios";
 import {
   User,
   Users,
@@ -152,6 +153,8 @@ const Profile: React.FC = () => {
     { id: "1", name: "", designation: "CEO" },
   ]);
   const [saved, setSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const addMember = () => {
     if (teamMembers.length >= 6) return;
@@ -172,9 +175,50 @@ const Profile: React.FC = () => {
     );
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    setError(null);
+    
+    // Validation
+    if (!companyName.trim()) {
+      setError("Company name is required");
+      return;
+    }
+    
+    const hasEmptyMember = teamMembers.some(m => !m.name.trim());
+    if (hasEmptyMember) {
+      setError("All team members must have a name");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const payload = {
+        companyName: companyName.trim(),
+        teamMembers: teamMembers.map(member => ({
+          name: member.name.trim(),
+          designation: member.designation,
+        })),
+      };
+
+      const response = await axios.post(
+        "https://sim-quick-commerce-backend.onrender.com/api/team/create",
+        payload
+      );
+
+      console.log("Team created successfully:", response.data);
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err: AxiosError<{ message: string }> | unknown) {
+      console.error("Error creating team:", err);
+      const errorMessage = axios.isAxiosError(err) && err.response?.data?.message
+        ? err.response.data.message
+        : "Failed to save team profile. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -442,11 +486,21 @@ const Profile: React.FC = () => {
           </div>
 
           {/* Save Button */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-start gap-2">
+              <span className="font-semibold">Error:</span>
+              <span>{error}</span>
+            </div>
+          )}
+          
           <button
             onClick={handleSave}
+            disabled={isLoading}
             className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
               saved
                 ? "bg-green-600 text-white"
+                : isLoading
+                ? "bg-slate-400 text-white cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md"
             }`}
           >
@@ -454,6 +508,11 @@ const Profile: React.FC = () => {
               <>
                 <CheckCircle2 className="w-4 h-4" />
                 Profile Saved!
+              </>
+            ) : isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
               </>
             ) : (
               <>
