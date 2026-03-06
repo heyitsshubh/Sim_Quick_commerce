@@ -33,7 +33,7 @@ export default function CategorySummary({ category, onSegmentClick }: any) {
       try {
         setLoading(true);
 
-        const res = await axios.get(
+        const res = await axios.get(  
           `https://sim-quick-commerce-backend.onrender.com/api/category-analysis/${category._id}`
         );
 

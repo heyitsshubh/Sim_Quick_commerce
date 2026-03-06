@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Store, Package, Truck, Laptop, DollarSign, TrendingUp, Users, CheckCircle2 } from 'lucide-react';
 import type { Player } from '../types/game';
 import BusinessModelSection from './decisions/BusinessModelSection';
@@ -29,30 +29,138 @@ const SECTIONS = [
    { id: 'pricing', label: 'Pricing', icon: DollarSign }
 ];
 
+const getCompletedFromRoundData = (roundData: any): Set<string> => {
+  const completed = new Set<string>();
+
+  if (!roundData) {
+    return completed;
+  }
+
+  if (Array.isArray(roundData.__completedSections)) {
+    roundData.__completedSections.forEach((sectionId: string) => completed.add(sectionId));
+  }
+
+  if (roundData.businessModel || roundData.marketPositioning) {
+    completed.add('business');
+  }
+  if (roundData.categories || roundData.productCategories) {
+    completed.add('products');
+  }
+  if (roundData.deliveryFleet) {
+    completed.add('delivery');
+  }
+  if (roundData.selections || roundData.technology) {
+    completed.add('technology');
+  }
+  if (roundData.supplierId || roundData.sourcing) {
+    completed.add('sourcing');
+  }
+  if (roundData.acquisition || roundData.marketing) {
+    completed.add('marketing');
+  }
+  if (roundData.operations || roundData.selectedEmployees) {
+    completed.add('operations');
+  }
+  if (roundData.pricing || roundData.selectedFeatures || roundData.rdInvestment) {
+    completed.add('pricing');
+  }
+
+  return completed;
+};
+
 export default function DecisionPanel({ player, round, onComplete, onUpdatePlayer }: DecisionPanelProps) {
   const [activeSection, setActiveSection] = useState('business');
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
+  const [hydrated, setHydrated] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stableUserId = localStorage.getItem('userId') || player.id || 'default-user';
+  const stableSimulationId = localStorage.getItem('simulationId') || 'default-simulation';
+
+  const completionStorageKey = useMemo(
+    () => `decision-completion:${stableUserId}:${stableSimulationId}:round:${round}`,
+    [stableUserId, stableSimulationId, round]
+  );
+
+  const activeSectionStorageKey = useMemo(
+    () => `decision-active-section:${stableUserId}:${stableSimulationId}:round:${round}`,
+    [stableUserId, stableSimulationId, round]
+  );
+
+  useEffect(() => {
+    const roundData = player?.decisions?.[round];
+    const inferred = getCompletedFromRoundData(roundData);
+    const stored = localStorage.getItem(completionStorageKey);
+    const storedActive = localStorage.getItem(activeSectionStorageKey);
+    const dataActive = roundData?.__activeSection;
+
+    if (dataActive && SECTIONS.some((section) => section.id === dataActive)) {
+      setActiveSection(dataActive);
+    } else if (storedActive && SECTIONS.some((section) => section.id === storedActive)) {
+      setActiveSection(storedActive);
+    } else {
+      setActiveSection('business');
+    }
+
+    if (!stored) {
+      setCompletedSections(inferred);
+      setHydrated(true);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        setCompletedSections(new Set<string>([...inferred, ...parsed]));
+      } else {
+        setCompletedSections(inferred);
+      }
+    } catch {
+      setCompletedSections(inferred);
+    }
+    setHydrated(true);
+  }, [completionStorageKey, activeSectionStorageKey, player, round]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(completionStorageKey, JSON.stringify(Array.from(completedSections)));
+  }, [completedSections, completionStorageKey, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(activeSectionStorageKey, activeSection);
+  }, [activeSection, activeSectionStorageKey, hydrated]);
+
   const handleSectionComplete = (sectionId: string, data: any) => {
-    const updatedPlayer = {
-      ...player,
-      decisions: {
-        ...player.decisions,
-        [round]: {
-          ...player.decisions[round],
-          ...data,
-        },
-      },
-      score: player.score + Math.floor(Math.random() * 50) + 20,
-    };
-
-    onUpdatePlayer(updatedPlayer);
-    setCompletedSections(new Set([...completedSections, sectionId]));
-
     const currentIndex = SECTIONS.findIndex(s => s.id === sectionId);
+    const nextSectionId = currentIndex < SECTIONS.length - 1 ? SECTIONS[currentIndex + 1].id : sectionId;
+
+    setCompletedSections((prev) => {
+      const next = new Set(prev);
+      next.add(sectionId);
+
+      localStorage.setItem(completionStorageKey, JSON.stringify(Array.from(next)));
+
+      const updatedPlayer = {
+        ...player,
+        decisions: {
+          ...player.decisions,
+          [round]: {
+            ...player.decisions[round],
+            ...data,
+            __completedSections: Array.from(next),
+            __activeSection: nextSectionId,
+          },
+        },
+        score: player.score + Math.floor(Math.random() * 50) + 20,
+      };
+
+      onUpdatePlayer(updatedPlayer);
+      return next;
+    });
+
     if (currentIndex < SECTIONS.length - 1) {
-      setActiveSection(SECTIONS[currentIndex + 1].id);
+      localStorage.setItem(activeSectionStorageKey, nextSectionId);
+      setActiveSection(nextSectionId);
     }
   };
 

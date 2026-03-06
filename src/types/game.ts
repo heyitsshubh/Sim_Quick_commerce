@@ -7,6 +7,8 @@ export interface Player {
 }
 
 export interface RoundDecisions {
+  __completedSections?: string[];
+  __activeSection?: string;
   businessModel?: string;
   marketPositioning?: string;
   productCategories: Record<string, CategoryDecision>;

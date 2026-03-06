@@ -5,7 +5,12 @@ import { getHRData, saveHRConfig } from "../../api/hrApi";
 import EmployeeCard from "../EmployeeCard";
 import Slider from "../Slider";
 
-export default function OperationsSection() {
+interface OperationsSectionProps {
+  round: number;
+  onComplete: (data: any) => void;
+}
+
+export default function OperationsSection({ round, onComplete }: OperationsSectionProps) {
   type Employee = {
     _id: string;
     name: string;
@@ -65,12 +70,27 @@ export default function OperationsSection() {
     try {
       setSaving(true);
       const res = await saveHRConfig({
+        userId: localStorage.getItem("userId"),
+        simulationId: localStorage.getItem("simulationId"),
+        roundNumber: round,
         selectedEmployees,
         trainingBudgetPerEmployee: training,
         bonusPerEmployee: bonus
       });
 
-      console.log(res.data.summary);
+      onComplete({
+        operations: {
+          selectedEmployees,
+          trainingBudgetPerEmployee: training,
+          bonusPerEmployee: bonus,
+          totalSalary,
+          topManagementSalary,
+          totalTrainingCost,
+          totalBonusCost,
+          totalHRCost,
+          summary: res?.data?.summary,
+        },
+      });
     } catch (error) {
       console.error("Failed to save HR config", error);
     } finally {

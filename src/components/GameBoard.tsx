@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Trophy, HelpCircle } from 'lucide-react';
 import type { GameState } from '../types/game';
 import { ROUND_UNLOCKS } from '../data/categories';
@@ -19,9 +19,23 @@ export default function GameBoard({
   onUpdateGame,
   onFinish,
 }: GameBoardProps) {
-  const [activePlayer, setActivePlayer] = useState(0);
+  const [activePlayer, setActivePlayer] = useState(() => {
+    const stored = localStorage.getItem('activePlayerIndex');
+    const parsed = stored ? Number(stored) : 0;
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  });
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('activePlayerIndex', String(activePlayer));
+  }, [activePlayer]);
+
+  useEffect(() => {
+    if (activePlayer >= gameState.players.length && gameState.players.length > 0) {
+      setActivePlayer(0);
+    }
+  }, [activePlayer, gameState.players.length]);
 
   const currentPlayer = gameState.players[activePlayer];
   const roundInfo =
@@ -42,6 +56,7 @@ export default function GameBoard({
         currentRound: gameState.currentRound + 1,
       });
       setActivePlayer(0);
+      localStorage.setItem('activePlayerIndex', '0');
       setShowLeaderboard(false);
     } else {
       onUpdateGame({

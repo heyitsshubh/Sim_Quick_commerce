@@ -106,7 +106,7 @@ export default function PlayerSetup({ onComplete }: PlayerSetupProps) {
     };
 
     onComplete([player]);
-    navigate("/game");
+    navigate("/decisions", { replace: true });
   };
 
   return (

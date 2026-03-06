@@ -2,8 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { GameState } from './types/game';
 import WelcomeScreen from './components/WelcomeScreen';
 import PlayerSetup from './components/PlayerSetup';
-import GameBoard from './components/GameBoard';
-import Leaderboard from './components/Leaderboard';
 import Profile from './routes/Profile';
 import BusinessPlan from './routes/BusinessPlan';
 import Decisions from './routes/Decisions';
@@ -51,56 +49,39 @@ function App() {
         <Route 
           path="/setup" 
           element={
-            <PlayerSetup
-              onComplete={(players) => {
-                setGameState(prev => ({
-                  ...prev,
-                  players,
-                  started: true,
-                }));
-              }}
-            />
+            gameState.started ? (
+              <Navigate to="/decisions" replace />
+            ) : (
+              <PlayerSetup
+                onComplete={(players) => {
+                  setGameState(prev => ({
+                    ...prev,
+                    players,
+                    started: true,
+                  }));
+                }}
+              />
+            )
           } 
         />
         
         <Route 
           path="/game" 
+          element={<Navigate to="/decisions" replace />} 
+        />
+        
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/business-plan" element={<BusinessPlan />} />
+        <Route
+          path="/decisions"
           element={
             gameState.started ? (
-              <GameBoard
-                gameState={gameState}
-                onUpdateGame={setGameState}
-                onFinish={() => {
-                  setGameState(prev => ({ ...prev, finished: true }));
-                }}
-              />
+              <Decisions gameState={gameState} onUpdateGame={setGameState} />
             ) : (
               <Navigate to="/setup" replace />
             )
-          } 
+          }
         />
-        
-        <Route 
-          path="/decisions" 
-          element={
-            gameState.finished ? (
-              <Leaderboard 
-                players={gameState.players}
-                currentRound={gameState.currentRound}
-                onNextRound={() => {
-                  setGameState(prev => ({ ...prev, currentRound: prev.currentRound + 1 }));
-                }}
-                isGameOver={gameState.finished}
-              />
-            ) : (
-              <Navigate to="/game" replace />
-            )
-          } 
-        />
- 
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/business-plan" element={<BusinessPlan />} />
-        <Route path="/decisions" element={<Decisions />} />
         <Route path="/analysis" element={<Analysis />} />
         <Route path="/analysis/category/:categoryId/:segment" element={<Analysis />} />
         <Route path="/analysis/category/:categoryId" element={<Analysis />} />
