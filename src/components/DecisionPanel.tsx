@@ -81,6 +81,7 @@ export default function DecisionPanel({
   const [activeSection, setActiveSection] = useState('business');
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
   const [hydrated, setHydrated] = useState(false);
+  const [hydratedRound, setHydratedRound] = useState<number | null>(null);
   const autoCompletedRoundRef = useRef<number | null>(null);
 
   const stableUserId = localStorage.getItem('userId') || player.id || 'default-user';
@@ -97,6 +98,9 @@ export default function DecisionPanel({
   );
 
   useEffect(() => {
+    setHydrated(false);
+    setHydratedRound(null);
+
     const roundData = player?.decisions?.[round];
     const inferred = getCompletedFromRoundData(roundData);
     const stored = localStorage.getItem(completionStorageKey);
@@ -114,6 +118,7 @@ export default function DecisionPanel({
     if (!stored) {
       setCompletedSections(inferred);
       setHydrated(true);
+      setHydratedRound(round);
       return;
     }
 
@@ -128,6 +133,7 @@ export default function DecisionPanel({
       setCompletedSections(inferred);
     }
     setHydrated(true);
+    setHydratedRound(round);
   }, [completionStorageKey, activeSectionStorageKey, player, round]);
 
   useEffect(() => {
@@ -189,7 +195,7 @@ export default function DecisionPanel({
   const allComplete = completedSections.size === SECTIONS.length;
 
   useEffect(() => {
-    if (!allComplete || isRoundLocked) {
+    if (!hydrated || hydratedRound !== round || !allComplete || isRoundLocked) {
       return;
     }
 
@@ -199,7 +205,7 @@ export default function DecisionPanel({
 
     autoCompletedRoundRef.current = round;
     onComplete();
-  }, [allComplete, isRoundLocked, onComplete, round]);
+  }, [allComplete, hydrated, hydratedRound, isRoundLocked, onComplete, round]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
