@@ -10,21 +10,30 @@ import Communication from './routes/Communication';
 import Results from './routes/Results';
 import { useState, useEffect } from 'react';
 
+const DEFAULT_ROUND_TIMER_DURATION_SEC = 10 * 60;
+
+const getDefaultGameState = (): GameState => ({
+  currentRound: 1,
+  maxRounds: 8,
+  roundTimerDurationSec: DEFAULT_ROUND_TIMER_DURATION_SEC,
+  roundStartedAt: null,
+  players: [],
+  started: false,
+  finished: false,
+});
+
 function App() {
-  const [gameState, setGameState] = useState<GameState>({
-    currentRound: 1,
-    maxRounds: 8,
-    players: [],
-    started: false,
-    finished: false,
-  });
+  const [gameState, setGameState] = useState<GameState>(getDefaultGameState());
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const savedGameState = localStorage.getItem('gameState');
     if (savedGameState) {
       try {
         const parsedState = JSON.parse(savedGameState);
-        setGameState(parsedState);
+        setGameState({
+          ...getDefaultGameState(),
+          ...parsedState,
+        });
       } catch (err) {
         console.error('Failed to parse saved game state:', err);
       }

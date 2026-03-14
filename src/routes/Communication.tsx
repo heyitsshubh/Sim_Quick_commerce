@@ -1,10 +1,10 @@
 // Updated Communication.tsx with tag popup filtering
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import axios from "axios";
 import TopNav from "../components/TopNav";
 import RoundsStrip from "../components/RoundStrip";
-import { Newspaper, Clock, X, HelpCircle, Trophy } from "lucide-react";
+import { Newspaper, Clock, X, HelpCircle, Timer, Trophy } from "lucide-react";
+import useGameRoundSnapshot from "../hooks/useGameRoundSnapshot";
 
 const API = "https://sim-quick-commerce-backend.onrender.com/api/news";
 
@@ -23,6 +23,7 @@ type Article = {
 };
 
 export default function Communication() {
+  const { currentRound, maxRounds, activePlayerScore, formattedTime } = useGameRoundSnapshot();
   const [articles, setArticles] = useState<Article[]>([]);
   const [popupArticles, setPopupArticles] = useState<Article[]>([]);
   const [openPopup, setOpenPopup] = useState(false);
@@ -52,17 +53,22 @@ export default function Communication() {
         <div className="mt-4 bg-white border border-slate-200 rounded-lg shadow-sm px-4 py-4">
           <div className="flex items-start justify-between gap-6">
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-slate-900">Round 1 of 8</h2>
+              <h2 className="text-xl font-bold text-slate-900">Round {currentRound} of {maxRounds}</h2>
               <p className="text-sm text-slate-600 mt-1">
                 Foundation: Fruits, dairy, cooking staples, snacks, beverages
               </p>
 
               <div className="mt-3">
-                <RoundsStrip currentRound={1} maxRounds={8} />
+                <RoundsStrip currentRound={currentRound} maxRounds={maxRounds} />
               </div>
             </div>
 
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-xs md:text-sm whitespace-nowrap bg-slate-100 text-slate-700 px-3 py-2 rounded-md">
+                <Timer className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="font-semibold">{formattedTime}</span>
+              </div>
+
               <button
                 onClick={() => {}}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-md transition"
@@ -73,7 +79,7 @@ export default function Communication() {
 
               <div className="flex items-center gap-2 text-sm">
                 <Trophy className="w-5 h-5 text-amber-500" />
-                <span className="font-semibold text-slate-900">0 pts</span>
+                <span className="font-semibold text-slate-900">{activePlayerScore} pts</span>
               </div>
             </div>
           </div>

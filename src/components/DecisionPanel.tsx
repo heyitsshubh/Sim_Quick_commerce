@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, Store, Package, Truck, Laptop, DollarSign, TrendingUp, Users, CheckCircle2 } from 'lucide-react';
 import type { Player } from '../types/game';
 import BusinessModelSection from './decisions/BusinessModelSection';
@@ -14,6 +14,8 @@ import OperationsSection from './decisions/OperationsSection';
 interface DecisionPanelProps {
   player: Player;
   round: number;
+  isRoundLocked?: boolean;
+  timeLeftSec?: number;
   onComplete: () => void;
   onUpdatePlayer: (player: Player) => void;
 }
@@ -68,10 +70,18 @@ const getCompletedFromRoundData = (roundData: any): Set<string> => {
   return completed;
 };
 
-export default function DecisionPanel({ player, round, onComplete, onUpdatePlayer }: DecisionPanelProps) {
+export default function DecisionPanel({
+  player,
+  round,
+  isRoundLocked = false,
+  timeLeftSec = 0,
+  onComplete,
+  onUpdatePlayer,
+}: DecisionPanelProps) {
   const [activeSection, setActiveSection] = useState('business');
   const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
   const [hydrated, setHydrated] = useState(false);
+  const autoCompletedRoundRef = useRef<number | null>(null);
 
   const stableUserId = localStorage.getItem('userId') || player.id || 'default-user';
   const stableSimulationId = localStorage.getItem('simulationId') || 'default-simulation';
@@ -131,6 +141,10 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
   }, [activeSection, activeSectionStorageKey, hydrated]);
 
   const handleSectionComplete = (sectionId: string, data: any) => {
+    if (isRoundLocked) {
+      return;
+    }
+
     const currentIndex = SECTIONS.findIndex(s => s.id === sectionId);
     const nextSectionId = currentIndex < SECTIONS.length - 1 ? SECTIONS[currentIndex + 1].id : sectionId;
 
@@ -165,10 +179,27 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
   };
 
   const handleFinish = () => {
+    if (isRoundLocked) {
+      return;
+    }
+
     onComplete();
   };
 
   const allComplete = completedSections.size === SECTIONS.length;
+
+  useEffect(() => {
+    if (!allComplete || isRoundLocked) {
+      return;
+    }
+
+    if (autoCompletedRoundRef.current === round) {
+      return;
+    }
+
+    autoCompletedRoundRef.current = round;
+    onComplete();
+  }, [allComplete, isRoundLocked, onComplete, round]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -187,6 +218,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
               return (
                 <button
                   key={section.id}
+                  disabled={isRoundLocked}
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm md:text-base ${
                     isActive
@@ -194,7 +226,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
                       : isComplete
                       ? 'bg-green-50 text-green-700'
                       : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                  }`}
+                  } ${isRoundLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   {isComplete ? (
                     <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
@@ -225,6 +257,7 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
           {allComplete && (
             <button
               onClick={handleFinish}
+              disabled={isRoundLocked}
               className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2 animate-pulse text-sm md:text-base"
             >
               <CheckCircle2 className="w-5 h-5" />
@@ -236,7 +269,21 @@ export default function DecisionPanel({ player, round, onComplete, onUpdatePlaye
       </div>
 
       <div className="lg:col-span-3">
-        <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 relative">
+          {isRoundLocked && (
+            <div className="absolute inset-0 z-10 bg-slate-900/35 rounded-xl flex items-start justify-end p-4">
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs md:text-sm font-medium text-slate-800 shadow-sm">
+                Round time is over. Advancing to next round...
+              </div>
+            </div>
+          )}
+
+          {timeLeftSec > 0 && timeLeftSec <= 30 && (
+            <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-3 py-2 text-xs md:text-sm font-medium">
+              Less than 30 seconds left in this round.
+            </div>
+          )}
+
           {activeSection === 'business' && (
             <BusinessModelSection
               round={round}

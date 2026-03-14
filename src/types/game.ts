@@ -72,6 +72,8 @@ export interface OperationsDecision {
 export interface GameState {
   currentRound: number;
   maxRounds: number;
+  roundTimerDurationSec: number;
+  roundStartedAt: string | null;
   players: Player[];
   started: boolean;
   finished: boolean;
